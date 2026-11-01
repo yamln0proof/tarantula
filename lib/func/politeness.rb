@@ -1,4 +1,12 @@
 #Copyright (c) 2026 Nabil Ahmed
 
-require 'open-uri'
-require 'nokogiri'
+require 'uri'
+require 'robotex'
+
+module Tarantula
+    class Politeness
+        #TODO: Implement politeness check here using Robotex
+        
+        
+    end
+end
