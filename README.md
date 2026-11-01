@@ -1,2 +1,2 @@
 # tarantula
-A Web Crawler for Scope Discovery.
+A Crawler for Web Discovery.
