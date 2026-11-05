@@ -1,6 +1,29 @@
 # Tarantula
 A Web Crawler for Scope Discovery.
 
+## MongoDB and Redis
+
+Tarantula provides MongoDB and Redis clients for persistent data and
+queue/cache features. Start the local development services with Docker Compose:
+
+```bash
+docker compose up -d
+```
+
+MongoDB is available at `127.0.0.1:27017` and Redis at `127.0.0.1:6379`.
+Install the Ruby dependencies with `bundle install`. The gem exposes lazy
+clients through:
+
+```ruby
+Tarantula::Config::Mongo.client
+Tarantula::Config::Redis.client
+```
+
+Set `MONGODB_URI` and `REDIS_URL` to use non-default services. Redis also
+supports `REDIS_HOST`, `REDIS_PORT`, and `REDIS_DB` when `REDIS_URL` is unset.
+Compose stores service data in named volumes; `docker compose down` preserves
+it, while `docker compose down --volumes` removes it.
+
 
 ## Installation
 
