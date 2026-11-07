@@ -8,4 +8,5 @@ require_relative "config/redis"
 module Tarantula
   class Error < StandardError; end
   # Your code goes here...
+  
 end

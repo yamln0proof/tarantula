@@ -3,13 +3,8 @@
 #Libraries
 require 'net/http'
 require 'uri'
-require 'set'
-require_relative '../../tarantula'
-require_relative '../../config/db_management'
 require_relative 'fetcher'
 require_relative 'processor'
-
-
 
 
 
@@ -20,7 +15,7 @@ module Worker
         #Intitialization of the crawler with input URLs
         def initialize(urls, pages: nil)
             @visited_urls = Set.new
-            @queue = urls
+            @queue = urls[]
 
         end
 
@@ -37,9 +32,9 @@ module Worker
                 current_url = @queue.shift
                 next if @visited_urls.include?(current_url)
                 @visited_urls.add(current_url)
-                html = Tarantula::Func::Fetcher.fetch(current_url)
+                html = Tarantula::Fetcher.fetch(current_url)
                 if html
-                    links = Tarantula::Func::Crawler::Processor.process(html, current_url)
+                    links = Tarantula::Processor.process(html, current_url)
                     Tarantula::Config::Mongo.store_page(current_url, html)
                     Tarantula::Config::Mongo.store_request(current_url, html)
                     pages_crawled += 1
