@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  cat <<'USAGE'
+Usage: bin/uninstall [--yes]
+
+Uninstalls all globally installed versions of the Tarantula gem and its
+generated executable. Project Bundler dependencies and crawl database files
+are left untouched.
+
+Options:
+  -y, --yes   Skip the confirmation prompt
+  -h, --help  Show this help
+USAGE
+}
+
+confirm=false
+while (($#)); do
+  case "$1" in
+    -y|--yes)
+      confirm=true
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "Unknown option: $1" >&2
+      usage >&2
+      exit 2
+      ;;
+  esac
+  shift
+done
+
+if ! command -v gem >/dev/null 2>&1; then
+  echo "RubyGems is required to uninstall Tarantula. Install Ruby first." >&2
+  exit 1
+fi
+
+if ! gem list --local --exact tarantula | grep -qE '^tarantula \('; then
+  echo "Tarantula is not installed as a gem; nothing to uninstall."
+  exit 0
+fi
+
+if [[ "$confirm" != true ]]; then
+  if [[ ! -t 0 ]]; then
+    echo "Run interactively or pass --yes to confirm uninstalling the Tarantula gem." >&2
+    exit 1
+  fi
+
+  printf "Uninstall all installed Tarantula gem versions and its executable? [y/N] "
+  read -r answer
+  case "$answer" in
+    y|Y|yes|YES)
+      ;;
+    *)
+      echo "Uninstall cancelled."
+      exit 0
+      ;;
+  esac
+fi
+
+gem uninstall tarantula --all --executables --ignore-dependencies
+echo "Tarantula gem uninstalled. Project dependencies and crawl data were left untouched."

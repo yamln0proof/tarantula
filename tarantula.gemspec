@@ -26,15 +26,17 @@ Gem::Specification.new do |spec|
   spec.files = IO.popen(%w[git ls-files -z], chdir: __dir__, err: IO::NULL) do |ls|
     ls.readlines("\x0", chomp: true).reject do |f|
       (f == gemspec) ||
-        f.start_with?(*%w[bin/ test/ spec/ features/ .git appveyor Gemfile])
+        %w[bin/setup bin/console bin/uninstall].include?(f) ||
+        f.start_with?(*%w[test/ spec/ features/ .git appveyor Gemfile])
     end
   end
-  spec.bindir = "exe"
-  spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
+  spec.bindir = "bin"
+  spec.executables = ["tarantula"]
   spec.require_paths = ["lib"]
 
   # Database clients
   spec.add_dependency "bigdecimal"
+  spec.add_dependency "curses", "~> 1.7.0"
   spec.add_dependency "mongo", "~> 2.21"
   spec.add_dependency "nokogiri", "~> 1.18"
   spec.add_dependency "redis", "~> 5.4"

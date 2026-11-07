@@ -1,79 +1,93 @@
-#Copyright (c) 2026 Nabil Ahmed
+# frozen_string_literal: true
 
-#Libraries
-require 'net/http'
-require 'uri'
-require_relative '../../config/db_management'
+require "uri"
 
 module Tarantula
-    class Fetcher
-        #Initialization
-        def initialize(user_agent, open_timeout, read_timeout, max_redirects)
-            @user_agent = 'Tarantula-Bot/1.0'
-            @open_timeout = 5
-            @read_timeout = 10
-            @max_redirects = 5
+  class Fetcher
+    HTML_EXTENSIONS = %w[.htm .html .xhtml].freeze
+    MAX_HTML_BYTES = 5 * 1024 * 1024
+
+    def initialize(fixture_root:, domains:, max_html_bytes: MAX_HTML_BYTES)
+      @fixture_root = File.realpath(fixture_root)
+      @domains = domains.to_h do |domain|
+        normalized_domain = domain.downcase
+        domain_path = File.realpath(File.join(@fixture_root, normalized_domain))
+        unless contained_by?(@fixture_root, domain_path)
+          raise ArgumentError, "Fixture directory must be inside the fixture root"
         end
 
-        #Fetching Logic
-        def fetch(uri_string, limit = @max_redirects)
-            raise ArgumentError, 'Too many HTTP redirects' if limit <= 0
+        [normalized_domain, domain_path]
+      end.freeze
+      @max_html_bytes = Integer(max_html_bytes)
+      raise ArgumentError, "max_html_bytes must be positive" unless @max_html_bytes.positive?
+    end
 
-            uri = URI.parse(uri_string)
-            http = build_http_client(uri)
+    def fetch(url)
+      uri = parse_url(url)
+      domain_root = @domains[uri.host.downcase]
+      raise ArgumentError, "URL host is not in the supplied domain list" unless domain_root
 
-            request = Net::HTTP::Get.new(uri)
-            request['User-Agent'] = @user_agent
-            request['Accept'] = 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+      file_path = resolve_file_path(uri, domain_root)
+      return { url: uri.to_s, kind: :missing, path: file_path } unless file_path
 
-            response = http.request(request)
-
-            #Response Management
-            case response
-            when Net::HTTPSuccess
-                {
-                    final_uri: uri.to_s 
-                    status: response.code.to_i,
-                    headers: response.to_hash
-                    body: response.body
-                    request: request.body
-
-                    #Store in DB
-                    Tarantula::Config::Mongo.store_page(final_uri, status, headers, response)
-
-                    Tarantula::Config::Mongo.store_request(final_uri, request)
-                }
-            when Net::HttpReditaction
-                {
-                    location = response['location']
-                    raise "Rediract missing location header" unless location
-
-                    #Handle relative redirect urls
-                    next_uri = URI.join(uri, location).to_s
-                    fetch(next_uri, limit -1)
-                }
-            else
-                {
-                    status: response.code.to_i,
-                    message: response.message,
-                    body: response.body,
-                    final_uri: uri.to_s 
-                }
-            end
-        #Error Handler    
-        rescue StandaredError => e
-            {
-                error: e.message,
-                final_uri: uri_string
-            }
+      size = File.size(file_path)
+      if html_file?(file_path)
+        body = File.binread(file_path, @max_html_bytes + 1)
+        if size > @max_html_bytes || body.bytesize > @max_html_bytes
+          raise ArgumentError, "HTML fixture exceeds #{@max_html_bytes} bytes: #{file_path}"
         end
-        private
 
-        def build_http_client(uri)
-            http = Net::HTTP.new(uri.host, uri.port)
-            http.use_ssl = (uri.scheme == 'https')
-            http.open_timeout = @open_timeout
-            http.read_timeout = @read_timeout
-            http
-        end
-            
+        {
+          url: uri.to_s,
+          kind: :page,
+          path: file_path,
+          size: size,
+          body: body
+        }
+      else
+        { url: uri.to_s, kind: :file, path: file_path, size: size }
+      end
+    end
+
+    private
+
+    def parse_url(url)
+      uri = URI.parse(url)
+      unless uri.is_a?(URI::HTTP) && uri.host && uri.userinfo.nil?
+        raise ArgumentError, "Only HTTP(S) fixture URLs are supported"
+      end
+
+      uri
+    rescue URI::InvalidURIError => e
+      raise ArgumentError, "Invalid fixture URL: #{e.message}"
+    end
+
+    def resolve_file_path(uri, domain_root)
+      relative_path = URI::DEFAULT_PARSER.unescape(uri.path)
+      raise ArgumentError, "Invalid path in fixture URL" if relative_path.include?("\0")
+
+      candidate = File.join(domain_root, relative_path.delete_prefix("/"))
+      if File.directory?(candidate)
+        candidate = File.join(candidate, "index.html")
+        candidate = File.join(File.dirname(candidate), "index.htm") unless File.file?(candidate)
+      end
+      return unless File.file?(candidate)
+
+      resolved_path = File.realpath(candidate)
+      return unless contained_by?(domain_root, resolved_path)
+
+      resolved_path
+    end
+
+    def html_file?(path)
+      return true if HTML_EXTENSIONS.include?(File.extname(path).downcase)
+
+      prefix = File.open(path, "rb") { |file| file.read(512) }.to_s
+      prefix.force_encoding(Encoding::UTF_8).scrub.match?(/<\s*(?:!doctype\s+html|html|head|body)\b/i)
+    end
+
+    def contained_by?(root, path)
+      path == root || path.start_with?("#{root}#{File::SEPARATOR}")
+    end
+  end
+end

@@ -1,8 +1,52 @@
 #!/usr/bin/env bash
 set -euo pipefail
-IFS=$'\n\t'
-set -vx
 
-bundle install
+script_dir="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+cd "$script_dir/.."
 
-# Do any other automated setup that you need to do here
+if ! command -v ruby >/dev/null 2>&1; then
+  echo "Ruby 3.1 or newer is required. Install Ruby, then run bin/setup again." >&2
+  exit 1
+fi
+
+ruby -e 'abort "Ruby 3.1 or newer is required (found #{RUBY_VERSION})." if Gem::Version.new(RUBY_VERSION) < Gem::Version.new("3.1")'
+
+if ! command -v bundle >/dev/null 2>&1; then
+  echo "Bundler is required. Install it with: gem install bundler" >&2
+  exit 1
+fi
+
+install_prerequisite_hint() {
+  case "$(uname -s)" in
+    Darwin)
+      cat >&2 <<'MESSAGE'
+Dependency installation failed. The curses gem may need native build tools.
+Install Xcode Command Line Tools with `xcode-select --install`; with Homebrew,
+install ncurses using `brew install ncurses`, then run bin/setup again.
+MESSAGE
+      ;;
+    Linux)
+      cat >&2 <<'MESSAGE'
+Dependency installation failed. The curses gem may need a C compiler and
+ncurses development headers. On Debian/Ubuntu run:
+  sudo apt-get install build-essential libncurses-dev
+On Fedora run:
+  sudo dnf install gcc make ncurses-devel
+On Arch Linux run:
+  sudo pacman -S base-devel ncurses
+Then run bin/setup again.
+MESSAGE
+      ;;
+    *)
+      echo "Dependency installation failed. Install a C compiler and ncurses development headers, then retry." >&2
+      ;;
+  esac
+}
+
+if ! bundle install; then
+  install_prerequisite_hint
+  exit 1
+fi
+
+bundle exec ruby -Ilib -e 'require "tarantula"'
+echo "Tarantula setup complete. Launch it with: bin/tarantula"

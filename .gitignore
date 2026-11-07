@@ -93,6 +93,10 @@ build/
 
 # General Compiled / Dist Directories
 bin/
+!bin/
+bin/*
+!bin/tarantula
+!bin/uninstall
 obj/
 out/
 dist/

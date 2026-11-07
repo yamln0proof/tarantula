@@ -1,50 +1,87 @@
-#Copyright (c) 2026 Nabil Ahmed
+# frozen_string_literal: true
 
-#Libraries
-require 'net/http'
-require 'uri'
-require_relative 'fetcher'
-require_relative 'processor'
+require "set"
+require "uri"
+require_relative "fetcher"
+require_relative "processor"
 
-
-
-#Worker module to crawl the URL and extract data
 module Worker
-    class Crawler
+  class Crawler
+    DOMAIN_PATTERN = /\A[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?\z/i
+    DEFAULT_MAX_PAGES = 500
 
-        #Intitialization of the crawler with input URLs
-        def initialize(urls, pages: nil)
-            @visited_urls = Set.new
-            @queue = urls[]
+    def initialize(domains, fixture_root:, max_pages: DEFAULT_MAX_PAGES)
+      @domains = normalize_domains(domains)
+      @max_pages = Integer(max_pages)
+      raise ArgumentError, "max_pages must be positive" unless @max_pages.positive?
 
-        end
-
-        def run
-            crawl
-        end
-
-        private
-         
-        #Main crawl method to process the URLs in the queue
-        def crawl
-            pages_crawled = 0
-            while @queue.any?
-                current_url = @queue.shift
-                next if @visited_urls.include?(current_url)
-                @visited_urls.add(current_url)
-                html = Tarantula::Fetcher.fetch(current_url)
-                if html
-                    links = Tarantula::Processor.process(html, current_url)
-                    Tarantula::Config::Mongo.store_page(current_url, html)
-                    Tarantula::Config::Mongo.store_request(current_url, html)
-                    pages_crawled += 1
-                    @queue.concat(links)
-                end
-                sleep(0.1)
-
-            end
-
-        end
-            
+      @fetcher = Tarantula::Fetcher.new(fixture_root: fixture_root, domains: @domains)
+      @processor = Tarantula::Processor.new(domains: @domains)
     end
+
+    def run
+      queue = @domains.map { |domain| "https://#{domain}/" }
+      queued = queue.to_set
+      visited = Set.new
+      pages = []
+      files = {}
+      missing = []
+      missing_urls = Set.new
+
+      until queue.empty? || pages.length >= @max_pages
+        url = queue.shift
+        next unless visited.add?(url)
+
+        result = @fetcher.fetch(url)
+        case result[:kind]
+        when :page
+          links = @processor.process(result[:body], url)
+          pages << result.reject { |key, _| key == :body }.merge(links: links)
+
+          links.each do |link|
+            if link[:kind] == :page
+              queue << link[:url] if queued.add?(link[:url])
+            else
+              next if files.key?(link[:url]) || missing_urls.include?(link[:url])
+
+              file = @fetcher.fetch(link[:url])
+              if file[:kind] == :file
+                files[file[:url]] ||= file
+              elsif file[:kind] == :missing
+                missing << file
+                missing_urls.add?(file[:url])
+              elsif queued.add?(file[:url])
+                queue << file[:url]
+              end
+            end
+          end
+        when :file
+          files[result[:url]] ||= result
+        when :missing
+          missing << result
+          missing_urls.add?(result[:url])
+        end
+      end
+
+      {
+        pages: pages,
+        files: files.values,
+        missing: missing,
+        visited: visited.to_a,
+        truncated: !queue.empty?
+      }
+    end
+
+    private
+
+    def normalize_domains(domains)
+      normalized = domains.map { |domain| domain.to_s.strip.downcase }.reject(&:empty?).uniq
+      raise ArgumentError, "Provide at least one domain" if normalized.empty?
+
+      invalid = normalized.reject { |domain| DOMAIN_PATTERN.match?(domain) && !domain.include?("..") }
+      raise ArgumentError, "Invalid domain name: #{invalid.first}" unless invalid.empty?
+
+      normalized.freeze
+    end
+  end
 end

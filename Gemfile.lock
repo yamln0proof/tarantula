@@ -3,6 +3,7 @@ PATH
   specs:
     tarantula (0.1.0)
       bigdecimal
+      curses (~> 1.7.0)
       mongo (~> 2.21)
       nokogiri (~> 1.18)
       redis (~> 5.4)
@@ -84,7 +85,6 @@ PLATFORMS
   x86_64-linux-musl
 
 DEPENDENCIES
-  curses (~> 1.7.0)
   irb
   rake (~> 13.0)
   tarantula!
