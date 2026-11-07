@@ -16,10 +16,11 @@
 
 **Tarantula: Web Crawler**
 
-A terminal-based crawler for exploring links and files in local HTML fixtures.
-Provide one fixture directory per domain, run a crawl, and browse saved results
-from the interactive terminal UI. Crawls operate on local files and do not
-send requests to supplied domains.
+* Clean UI
+* Seamless Crawling
+* Database & Project Management
+* Customise Crawling
+* Export project
 
 ## Installation
 
