@@ -1,6 +1,7 @@
 #Copyright (c) 2026 Nabil Ahmed
 # frozen_string_literal: true
 
+#Libraries
 require "nokogiri"
 require "set"
 require "uri"

@@ -19,8 +19,9 @@ module Tarantula
         @settings = settings
       end
 
+      
       def run
-        @output.puts "Live HTTP(S) crawl restricted to supplied domains"
+        @output.puts "Live HTTP(S) crawl"
         @output.print "Domains (comma-separated or @domain-file): "
         domain_input = @input.gets&.strip
         return if domain_input.nil? || domain_input.empty?
@@ -41,6 +42,7 @@ module Tarantula
 
       private
 
+      #Result box
       def print_summary(result)
         @output.puts "HTML pages: #{result[:pages].length}"
         @output.puts "Files: #{result[:files].length}"

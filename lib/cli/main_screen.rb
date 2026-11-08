@@ -100,6 +100,7 @@ module Tarantula
         @error = nil
       end
 
+      #Crawl method, not sure why it is here :)
       def run_crawl
         domain_input = @values[:domains].strip
         raise ArgumentError, "Enter at least one domain." if domain_input.empty?
@@ -121,10 +122,11 @@ module Tarantula
         @error = e.message
       end
 
+      #Crawling screen
       def draw_screen
         @window.clear
         draw_centered(1, "TARANTULA - CRAWL", color(1))
-        draw_centered(3, "Live HTTP(S) crawl restricted to supplied domains", Curses::A_NORMAL)
+        draw_centered(3, "Live HTTP(S) crawl ;)", Curses::A_NORMAL)
 
         FIELDS.each_with_index do |field, index|
           row = 6 + index * 3
@@ -144,6 +146,7 @@ module Tarantula
         @window.refresh
       end
 
+      #Result box
       def draw_result
         draw_text(13, "Crawl completed and saved.", color(4))
         draw_text(14, "Pages: #{@result[:pages].length}  Files: #{@result[:files].length}  Missing: #{@result[:missing].length}", Curses::A_NORMAL)

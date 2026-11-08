@@ -1,4 +1,6 @@
+#Copyright (c) 2026 Nabil Ahmed
 # frozen_string_literal: true
+
 
 module Tarantula
   module DomainScope

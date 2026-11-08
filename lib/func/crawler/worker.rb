@@ -1,11 +1,14 @@
+#Copyright (c) 2026 Nabil Ahmed
 # frozen_string_literal: true
 
+#Libraries
 require "set"
 require "uri"
 require_relative "fetcher"
 require_relative "processor"
 require_relative "../../../models/captcha/captcha_detector"
 require_relative "../../config/settings"
+
 
 module Worker
   class Crawler
@@ -63,16 +66,18 @@ module Worker
             next
           end
 
+          #Captcha block
           if detection[:detected]
             captchas << {
               url: result[:url],
               confidence: detection[:confidence],
               signals: detection[:signals]
             }
-
+            #TODO: Captcha solving Code
             
           end
-
+          
+          #Main crawling logic(fetching, processing)
           begin
             links = extract_and_enqueue_links(result, queue, queued)
           rescue ArgumentError, EncodingError, Nokogiri::XML::SyntaxError, URI::Error => error
@@ -101,6 +106,8 @@ module Worker
               queue << file[:url]
             end
           end
+        
+          #Save to file
         when :file
           files[result[:url]] ||= result
         when :missing
@@ -109,6 +116,7 @@ module Worker
         end
       end
 
+      #Sort and Storing block
       {
         domains: @domains,
         pages: pages,
