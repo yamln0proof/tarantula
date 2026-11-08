@@ -1,93 +1,146 @@
+#Copyright (c) 2026 Nabil Ahmed
 # frozen_string_literal: true
 
+require "net/http"
+require "openssl"
+require "set"
+require "timeout"
 require "uri"
 
 module Tarantula
   class Fetcher
     HTML_EXTENSIONS = %w[.htm .html .xhtml].freeze
     MAX_HTML_BYTES = 5 * 1024 * 1024
+    OPEN_TIMEOUT = 5
+    READ_TIMEOUT = 10
+    MAX_REDIRECTS = 5
 
-    def initialize(fixture_root:, domains:, max_html_bytes: MAX_HTML_BYTES)
-      @fixture_root = File.realpath(fixture_root)
-      @domains = domains.to_h do |domain|
-        normalized_domain = domain.downcase
-        domain_path = File.realpath(File.join(@fixture_root, normalized_domain))
-        unless contained_by?(@fixture_root, domain_path)
-          raise ArgumentError, "Fixture directory must be inside the fixture root"
-        end
+    #Initialization 
+    def initialize(domains:, max_html_bytes: MAX_HTML_BYTES)
+      @domains = domains.map { |domain| normalize_domain(domain) }.to_set.freeze
+      raise ArgumentError, "Provide at least one domain" if @domains.empty?
 
-        [normalized_domain, domain_path]
-      end.freeze
       @max_html_bytes = Integer(max_html_bytes)
       raise ArgumentError, "max_html_bytes must be positive" unless @max_html_bytes.positive?
     end
 
+    #Main fetching mechanism
     def fetch(url)
       uri = parse_url(url)
-      domain_root = @domains[uri.host.downcase]
-      raise ArgumentError, "URL host is not in the supplied domain list" unless domain_root
+      redirects = 0
 
-      file_path = resolve_file_path(uri, domain_root)
-      return { url: uri.to_s, kind: :missing, path: file_path } unless file_path
+      loop do
+        validate_target!(uri)
+        response = request(uri)
+        status = response.fetch(:status)
 
-      size = File.size(file_path)
-      if html_file?(file_path)
-        body = File.binread(file_path, @max_html_bytes + 1)
-        if size > @max_html_bytes || body.bytesize > @max_html_bytes
-          raise ArgumentError, "HTML fixture exceeds #{@max_html_bytes} bytes: #{file_path}"
+        if [301, 302, 303, 307, 308].include?(status)
+          location = response[:location]
+          raise IOError, "Redirect response has no Location header: #{uri}" unless location
+          raise IOError, "Too many redirects while fetching #{url}" if redirects >= MAX_REDIRECTS
+
+          uri = resolve_redirect(uri, location)
+          redirects += 1
+          next
         end
 
-        {
-          url: uri.to_s,
-          kind: :page,
-          path: file_path,
-          size: size,
-          body: body
-        }
-      else
-        { url: uri.to_s, kind: :file, path: file_path, size: size }
+        return { url: uri.to_s, kind: :missing, status: status } if [404, 410].include?(status)
+        raise IOError, "HTTP #{status} while fetching #{uri}" unless status.between?(200, 299)
+
+        return classify_response(uri, response)
       end
+    rescue SocketError, Timeout::Error, SystemCallError, Net::HTTPError, OpenSSL::SSL::SSLError => error
+      raise IOError, "Unable to fetch #{url}: #{error.message}"
     end
 
     private
 
+
+    #Request method
+    def request(uri)
+      response_data = {}
+      http = Net::HTTP.new(uri.host, uri.port, nil)
+      http.use_ssl = uri.scheme == "https"
+      http.open_timeout = OPEN_TIMEOUT
+      http.read_timeout = READ_TIMEOUT
+      http.start do |http|
+        request = Net::HTTP::Get.new(uri.request_uri)
+        request["User-Agent"] = "Tarantula/0.1 (domain-scoped crawler)"
+        http.request(request) do |response|
+          response_data[:status] = response.code.to_i
+          response_data[:location] = response["location"]
+          response_data[:content_type] = response["content-type"].to_s
+          next unless response_data[:status].between?(200, 299)
+
+          response_data[:body] = +"".b
+          response_data[:size] = 0
+          response.read_body do |chunk|
+            response_data[:size] += chunk.bytesize
+            remaining = @max_html_bytes + 1 - response_data[:body].bytesize
+            response_data[:body] << chunk.byteslice(0, remaining) if remaining.positive?
+          end
+        end
+      end
+      response_data
+    end
+
+
+    #Extract links form response
+    def classify_response(uri, response)
+      body = response.fetch(:body)
+      content_type = response.fetch(:content_type)
+      size = response.fetch(:size)
+      html = content_type.match?(%r{\Atext/html\b}i) ||
+             content_type.match?(%r{\Aapplication/xhtml\+xml\b}i) ||
+             HTML_EXTENSIONS.include?(File.extname(uri.path).downcase) ||
+             body.byteslice(0, 512).to_s.force_encoding(Encoding::UTF_8).scrub
+                 .match?(/<\s*(?:!doctype\s+html|html|head|body)\b/i)
+
+      return { url: uri.to_s, kind: :file, size: size, content_type: content_type } unless html
+      raise IOError, "HTML response exceeds #{@max_html_bytes} bytes: #{uri}" if size > @max_html_bytes
+
+      {
+        url: uri.to_s,
+        kind: :page,
+        size: size,
+        content_type: content_type,
+        body: body
+      }
+    end
+
+    #Get correct user input
+    def validate_target!(uri)
+      unless uri.is_a?(URI::HTTP) && uri.host && uri.userinfo.nil?
+        raise ArgumentError, "Only HTTP(S) URLs without credentials are supported"
+      end
+      unless @domains.include?(uri.host.downcase)
+        raise ArgumentError, "URL host is not in the supplied domain list: #{uri.host}"
+      end
+      return if uri.port == (uri.scheme == "https" ? 443 : 80)
+
+      raise ArgumentError, "Non-standard ports are not allowed: #{uri}"
+    end
+
     def parse_url(url)
       uri = URI.parse(url)
-      unless uri.is_a?(URI::HTTP) && uri.host && uri.userinfo.nil?
-        raise ArgumentError, "Only HTTP(S) fixture URLs are supported"
-      end
-
       uri
     rescue URI::InvalidURIError => e
-      raise ArgumentError, "Invalid fixture URL: #{e.message}"
+      raise ArgumentError, "Invalid URL: #{e.message}"
     end
 
-    def resolve_file_path(uri, domain_root)
-      relative_path = URI::DEFAULT_PARSER.unescape(uri.path)
-      raise ArgumentError, "Invalid path in fixture URL" if relative_path.include?("\0")
+    def resolve_redirect(uri, location)
+      parse_url(URI.join(uri.to_s, location).to_s)
+    rescue URI::InvalidURIError => e
+      raise IOError, "Invalid redirect URL from #{uri}: #{e.message}"
+    end
 
-      candidate = File.join(domain_root, relative_path.delete_prefix("/"))
-      if File.directory?(candidate)
-        candidate = File.join(candidate, "index.html")
-        candidate = File.join(File.dirname(candidate), "index.htm") unless File.file?(candidate)
+    def normalize_domain(domain)
+      normalized = domain.to_s.strip.downcase
+      unless normalized.match?(/\A[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?\z/) && !normalized.include?("..")
+        raise ArgumentError, "Invalid domain name: #{domain}"
       end
-      return unless File.file?(candidate)
 
-      resolved_path = File.realpath(candidate)
-      return unless contained_by?(domain_root, resolved_path)
-
-      resolved_path
-    end
-
-    def html_file?(path)
-      return true if HTML_EXTENSIONS.include?(File.extname(path).downcase)
-
-      prefix = File.open(path, "rb") { |file| file.read(512) }.to_s
-      prefix.force_encoding(Encoding::UTF_8).scrub.match?(/<\s*(?:!doctype\s+html|html|head|body)\b/i)
-    end
-
-    def contained_by?(root, path)
-      path == root || path.start_with?("#{root}#{File::SEPARATOR}")
+      normalized
     end
   end
 end

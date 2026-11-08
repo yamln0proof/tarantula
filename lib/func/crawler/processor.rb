@@ -1,3 +1,4 @@
+#Copyright (c) 2026 Nabil Ahmed
 # frozen_string_literal: true
 
 require "nokogiri"
@@ -20,10 +21,14 @@ module Tarantula
       ["object[data]", "data", :file]
     ].freeze
 
+    #Initialization
     def initialize(domains:)
-      @domains = domains.map(&:downcase).to_set.freeze
+      @domains = Array(domains).flat_map do |domain|
+        domain.to_s.split(/[,\s]+/)
+      end.map(&:strip).reject(&:empty?).map(&:downcase).to_set.freeze
     end
 
+    #Main processing mechanism
     def process(html, page_url)
       document = Nokogiri::HTML(html)
       links = {}
@@ -43,12 +48,14 @@ module Tarantula
 
     private
 
+    #Normalization
     def normalize_url(page_url, reference)
       return if reference.nil? || reference.strip.empty?
 
       url = URI.join(page_url, reference.strip)
       return unless url.is_a?(URI::HTTP) && @domains.include?(url.host&.downcase)
       return unless url.userinfo.nil?
+      return unless url.port == (url.scheme == "https" ? 443 : 80)
 
       url.fragment = nil
       url.query = nil

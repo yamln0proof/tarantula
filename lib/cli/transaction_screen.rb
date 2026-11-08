@@ -1,3 +1,4 @@
+#Copyright (c) 2026 Nabil Ahmed
 # frozen_string_literal: true
 
 require "curses"
@@ -92,7 +93,7 @@ module Tarantula
           absolute_index = start + index
           marker = absolute_index == @selection ? "> " : "  "
           domains = Array(crawl[:domains]).join(", ")
-          summary = "#{crawl[:created_at]}  #{domains}  pages: #{Array(crawl[:pages]).length}  files: #{Array(crawl[:files]).length}"
+          summary = "#{crawl[:created_at]}  #{domains}  pages: #{Array(crawl[:pages]).length}  files: #{Array(crawl[:files]).length}  CAPTCHAs: #{Array(crawl[:captchas]).length}"
           draw_text(3 + index, "#{marker}#{summary}", absolute_index == @selection ? Curses::A_REVERSE : Curses::A_NORMAL)
         end
       end
@@ -103,6 +104,8 @@ module Tarantula
           "Created: #{crawl[:created_at]}",
           "Domains: #{Array(crawl[:domains]).join(', ')}",
           "Pages: #{Array(crawl[:pages]).length}  Files: #{Array(crawl[:files]).length}  Missing: #{Array(crawl[:missing]).length}",
+          "CAPTCHAs detected: #{Array(crawl[:captchas]).length}",
+          "Stopped for CAPTCHA: #{crawl[:stopped_for_captcha] ? 'yes' : 'no'}",
           "Truncated at page limit: #{crawl[:truncated] ? 'yes' : 'no'}",
           "",
           "PAGES"
@@ -112,6 +115,10 @@ module Tarantula
         lines.concat(Array(crawl[:files]).map { |file| "  #{file[:url]} (#{file[:size]} bytes)" })
         lines.concat(["", "MISSING LINKS"])
         lines.concat(Array(crawl[:missing]).map { |missing| "  #{missing[:url]}" })
+        lines.concat(["", "CAPTCHAS"])
+        lines.concat(Array(crawl[:captchas]).map do |captcha|
+          "  #{captcha[:url]} (confidence: #{captcha[:confidence]})"
+        end)
 
         visible_count = [Curses.lines - 4, 1].max
         max_offset = [lines.length - visible_count, 0].max

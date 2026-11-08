@@ -1,3 +1,4 @@
+#Copyright (c) 2026 Nabil Ahmed
 # frozen_string_literal: true
 
 require "curses"
@@ -8,8 +9,7 @@ module Tarantula
   module CLI
     class MainScreen
       FIELDS = [
-        { name: :fixture_root, label: "Fixture root directory" },
-        { name: :domains, label: "Domains (comma-separated)" }
+        { name: :domains, label: "Domains (comma-separated or @file)" }
       ].freeze
 
       def self.run(database: nil)
@@ -18,7 +18,7 @@ module Tarantula
 
       def initialize(database: nil)
         @database = database || Tarantula::Config::CrawlDatabase.new
-        @values = { fixture_root: String.new, domains: String.new }
+        @values = { domains: String.new }
         @active_field = 0
         @result = nil
         @error = nil
@@ -99,14 +99,19 @@ module Tarantula
       end
 
       def run_crawl
-        fixture_root = @values[:fixture_root].strip
-        domains = @values[:domains].split(",").map(&:strip).reject(&:empty?)
-        raise ArgumentError, "Enter a fixture root directory." if fixture_root.empty?
-        raise ArgumentError, "Enter at least one domain." if domains.empty?
+        domain_input = @values[:domains].strip
+        raise ArgumentError, "Enter at least one domain." if domain_input.empty?
 
         @error = nil
-        @result = Worker::Crawler.new(domains, fixture_root: fixture_root).run
-        crawl = @database.store_crawl(domains: domains, result: @result)
+        @result = if domain_input.start_with?("@")
+                    domains_file = domain_input.delete_prefix("@").strip
+                    raise ArgumentError, "Enter a domain file path after @." if domains_file.empty?
+
+                    Worker::Crawler.new(domains_file: domains_file).run
+                  else
+                    Worker::Crawler.new(domain_input.split(",")).run
+                  end
+        crawl = @database.store_crawl(domains: @result.fetch(:domains), result: @result)
         @crawl_id = crawl.fetch(:id)
       rescue ArgumentError, Errno::ENOENT, Errno::EACCES, IOError => e
         @result = nil
@@ -116,7 +121,7 @@ module Tarantula
       def draw_screen
         @window.clear
         draw_centered(1, "TARANTULA - CRAWL", color(1))
-        draw_centered(3, "Local HTML fixtures only; no network requests", Curses::A_NORMAL)
+        draw_centered(3, "Live HTTP(S) crawl restricted to supplied domains", Curses::A_NORMAL)
 
         FIELDS.each_with_index do |field, index|
           row = 6 + index * 3
@@ -139,10 +144,11 @@ module Tarantula
       def draw_result
         draw_text(13, "Crawl completed and saved.", color(4))
         draw_text(14, "Pages: #{@result[:pages].length}  Files: #{@result[:files].length}  Missing: #{@result[:missing].length}", Curses::A_NORMAL)
+        draw_text(16, "Stopped because a CAPTCHA was detected.", color(3)) if @result[:stopped_for_captcha]
         draw_text(15, "Crawl ID: #{@crawl_id}", Curses::A_NORMAL)
 
         preview = @result[:pages].first(3).map { |page| page[:url] }
-        preview.each_with_index { |url, index| draw_text(17 + index, url, Curses::A_NORMAL) }
+        preview.each_with_index { |url, index| draw_text(18 + index, url, Curses::A_NORMAL) }
         draw_text(Curses.lines - 2, "Press Enter, q, or Esc to return to the menu", Curses::A_REVERSE)
       end
 

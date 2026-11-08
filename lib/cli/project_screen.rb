@@ -1,3 +1,4 @@
+#Copyright (c) 2026 Nabil Ahmed
 # frozen_string_literal: true
 
 require_relative "../func/crawler/worker"
@@ -17,17 +18,20 @@ module Tarantula
       end
 
       def run
-        @output.puts "Local HTML fixture crawl (no network requests)"
-        @output.print "Fixture root directory: "
-        fixture_root = @input.gets&.strip
-        return if fixture_root.nil? || fixture_root.empty?
+        @output.puts "Live HTTP(S) crawl restricted to supplied domains"
+        @output.print "Domains (comma-separated or @domain-file): "
+        domain_input = @input.gets&.strip
+        return if domain_input.nil? || domain_input.empty?
 
-        @output.print "Domains (comma-separated; each must have a matching subdirectory): "
-        domains = @input.gets.to_s.split(",").map(&:strip).reject(&:empty?)
-        raise ArgumentError, "Provide at least one domain" if domains.empty?
+        result = if domain_input.start_with?("@")
+                   domains_file = domain_input.delete_prefix("@").strip
+                   raise ArgumentError, "Enter a domain file path after @." if domains_file.empty?
 
-        result = Worker::Crawler.new(domains, fixture_root: fixture_root).run
-        crawl = @database.store_crawl(domains: domains, result: result)
+                   Worker::Crawler.new(domains_file: domains_file).run
+                 else
+                   Worker::Crawler.new(domain_input.split(",")).run
+                 end
+        crawl = @database.store_crawl(domains: result.fetch(:domains), result: result)
         print_summary(result)
         @output.puts "Saved crawl: #{crawl[:id]}"
         result
@@ -39,6 +43,7 @@ module Tarantula
         @output.puts "HTML pages: #{result[:pages].length}"
         @output.puts "Files: #{result[:files].length}"
         @output.puts "Missing links: #{result[:missing].length}"
+        @output.puts "CAPTCHA detected; crawl stopped." if result[:stopped_for_captcha]
         @output.puts "Stopped at the page limit." if result[:truncated]
       end
     end

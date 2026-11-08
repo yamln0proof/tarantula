@@ -11,16 +11,17 @@
                / | \
               /  |  \
 ```
-
-## Introduction
-
 **Tarantula: Web Crawler**
 
-* Clean UI
-* Seamless Crawling
-* Database & Project Management
-* Customise Crawling
-* Export project
+A terminal-based crawler for exploring pages and files on supplied domains.
+Run a crawl from the interactive terminal UI and browse saved results.
+
+- Clean, interactive UI
+- Domain-scoped crawling
+- Database and project management
+- Configurable crawling and project export
+- CAPTCHA detection that stops crawling without solving challenges
+
 
 ## Installation
 
@@ -56,32 +57,19 @@ Start the terminal UI:
 bin/tarantula
 ```
 
-Choose **Crawl**, then enter:
-
-1. The root directory containing your fixtures.
-2. A comma-separated list of domains. Each domain must have a matching
-   subdirectory under the fixture root.
-
-For example:
-
-```text
-fixtures/
-└── example.test/
-    ├── index.html
-    ├── about.html
-    └── documents/
-        └── report.pdf
-```
-
-The `example.test` directory must contain `index.html` or `index.htm`. Links
-are followed only when they point to one of the supplied domains and resolve
-inside that domain's fixture directory. Disallowed external links and paths
-outside the fixture tree are not fetched. HTML page crawling is capped at 500
-pages per run.
+Choose **Crawl**, then enter comma-separated domains or `@/path/to/domains.txt`.
+The domain file accepts comma-separated or whitespace-separated entries and
+lines beginning with `#` as comments. Requests use HTTP(S), are limited to
+the exact supplied hosts and standard ports, and do not follow redirects to
+other hosts. HTML page crawling is capped at 500 pages per run. If a page
+appears to contain a CAPTCHA, the crawler records the detection and stops
+without processing that page or attempting to solve the challenge. Detection
+uses a local, confidence-scored rule-based HTML classifier.
 
 Crawl summaries and discovered page/file metadata are saved to a JSON database
 at `data/tarantula-crawls.json`. Override its location with
-`TARANTULA_DATABASE_PATH`. Choose **View Saved Logs** from the welcome screen to
+`TARANTULA_DATABASE_PATH`.
+Choose **View Saved Logs** from the welcome screen to
 browse previous crawls and inspect their results.
 
 ## Uninstallation
