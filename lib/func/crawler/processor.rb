@@ -4,6 +4,7 @@
 require "nokogiri"
 require "set"
 require "uri"
+require_relative "domain_scope"
 
 module Tarantula
   class Processor
@@ -50,17 +51,19 @@ module Tarantula
 
     #Normalization
     def normalize_url(page_url, reference)
-      return if reference.nil? || reference.strip.empty?
+      return if reference.nil?
 
-      url = URI.join(page_url, reference.strip)
-      return unless url.is_a?(URI::HTTP) && @domains.include?(url.host&.downcase)
+      reference = reference.to_s.dup.force_encoding(Encoding::UTF_8).scrub.strip
+      return if reference.empty?
+
+      url = URI.join(page_url, reference)
+      return unless url.is_a?(URI::HTTP) && DomainScope.includes?(@domains, url.host)
       return unless url.userinfo.nil?
       return unless url.port == (url.scheme == "https" ? 443 : 80)
 
       url.fragment = nil
-      url.query = nil
       url.to_s
-    rescue URI::InvalidURIError
+    rescue ArgumentError, URI::InvalidURIError
       nil
     end
 

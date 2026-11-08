@@ -4,6 +4,7 @@
 require "curses"
 require_relative "../func/crawler/worker"
 require_relative "../config/crawl_database"
+require_relative "../config/settings"
 
 module Tarantula
   module CLI
@@ -12,12 +13,13 @@ module Tarantula
         { name: :domains, label: "Domains (comma-separated or @file)" }
       ].freeze
 
-      def self.run(database: nil)
-        new(database: database).run
+      def self.run(database: nil, settings: Tarantula::Config::Settings.new)
+        new(database: database, settings: settings).run
       end
 
-      def initialize(database: nil)
-        @database = database || Tarantula::Config::CrawlDatabase.new
+      def initialize(database: nil, settings: Tarantula::Config::Settings.new)
+        @database = database
+        @settings = settings
         @values = { domains: String.new }
         @active_field = 0
         @result = nil
@@ -107,11 +109,12 @@ module Tarantula
                     domains_file = domain_input.delete_prefix("@").strip
                     raise ArgumentError, "Enter a domain file path after @." if domains_file.empty?
 
-                    Worker::Crawler.new(domains_file: domains_file).run
+                    Worker::Crawler.new(domains_file: domains_file, settings: @settings).run
                   else
-                    Worker::Crawler.new(domain_input.split(",")).run
+                    Worker::Crawler.new(domain_input.split(","), settings: @settings).run
                   end
-        crawl = @database.store_crawl(domains: @result.fetch(:domains), result: @result)
+        database = @database || Tarantula::Config::CrawlDatabase.new(path: @settings[:database_path])
+        crawl = database.store_crawl(domains: @result.fetch(:domains), result: @result)
         @crawl_id = crawl.fetch(:id)
       rescue ArgumentError, Errno::ENOENT, Errno::EACCES, IOError => e
         @result = nil
@@ -145,10 +148,13 @@ module Tarantula
         draw_text(13, "Crawl completed and saved.", color(4))
         draw_text(14, "Pages: #{@result[:pages].length}  Files: #{@result[:files].length}  Missing: #{@result[:missing].length}", Curses::A_NORMAL)
         draw_text(16, "Stopped because a CAPTCHA was detected.", color(3)) if @result[:stopped_for_captcha]
+        errors = Array(@result[:errors])
+        draw_text(17, "Crawl errors: #{errors.length}", errors.empty? ? Curses::A_NORMAL : color(3))
+        draw_text(18, "#{errors.first[:url]}: #{errors.first[:error]}", color(3)) unless errors.empty?
         draw_text(15, "Crawl ID: #{@crawl_id}", Curses::A_NORMAL)
 
         preview = @result[:pages].first(3).map { |page| page[:url] }
-        preview.each_with_index { |url, index| draw_text(18 + index, url, Curses::A_NORMAL) }
+        preview.each_with_index { |url, index| draw_text(19 + index, url, Curses::A_NORMAL) }
         draw_text(Curses.lines - 2, "Press Enter, q, or Esc to return to the menu", Curses::A_REVERSE)
       end
 

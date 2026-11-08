@@ -36,6 +36,7 @@ module Tarantula
           files: result.fetch(:files),
           missing: result.fetch(:missing),
           captchas: result.fetch(:captchas, []),
+          errors: result.fetch(:errors, []),
           visited: result.fetch(:visited),
           stopped_for_captcha: result.fetch(:stopped_for_captcha, false),
           truncated: result.fetch(:truncated)

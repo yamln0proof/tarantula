@@ -6,22 +6,29 @@ require "openssl"
 require "set"
 require "timeout"
 require "uri"
+require_relative "domain_scope"
 
 module Tarantula
   class Fetcher
     HTML_EXTENSIONS = %w[.htm .html .xhtml].freeze
-    MAX_HTML_BYTES = 5 * 1024 * 1024
+    MAX_HTML_BYTES = 50 * 1024 * 1024
     OPEN_TIMEOUT = 5
     READ_TIMEOUT = 10
     MAX_REDIRECTS = 5
 
     #Initialization 
-    def initialize(domains:, max_html_bytes: MAX_HTML_BYTES)
+    def initialize(domains:, max_html_bytes: MAX_HTML_BYTES, open_timeout: OPEN_TIMEOUT,
+                   read_timeout: READ_TIMEOUT, max_redirects: MAX_REDIRECTS)
       @domains = domains.map { |domain| normalize_domain(domain) }.to_set.freeze
       raise ArgumentError, "Provide at least one domain" if @domains.empty?
 
       @max_html_bytes = Integer(max_html_bytes)
       raise ArgumentError, "max_html_bytes must be positive" unless @max_html_bytes.positive?
+      @open_timeout = Integer(open_timeout)
+      @read_timeout = Integer(read_timeout)
+      @max_redirects = Integer(max_redirects)
+      raise ArgumentError, "timeouts must be positive" unless @open_timeout.positive? && @read_timeout.positive?
+      raise ArgumentError, "max_redirects cannot be negative" if @max_redirects.negative?
     end
 
     #Main fetching mechanism
@@ -37,7 +44,7 @@ module Tarantula
         if [301, 302, 303, 307, 308].include?(status)
           location = response[:location]
           raise IOError, "Redirect response has no Location header: #{uri}" unless location
-          raise IOError, "Too many redirects while fetching #{url}" if redirects >= MAX_REDIRECTS
+          raise IOError, "Too many redirects while fetching #{url}" if redirects >= @max_redirects
 
           uri = resolve_redirect(uri, location)
           redirects += 1
@@ -61,11 +68,11 @@ module Tarantula
       response_data = {}
       http = Net::HTTP.new(uri.host, uri.port, nil)
       http.use_ssl = uri.scheme == "https"
-      http.open_timeout = OPEN_TIMEOUT
-      http.read_timeout = READ_TIMEOUT
+      http.open_timeout = @open_timeout
+      http.read_timeout = @read_timeout
       http.start do |http|
         request = Net::HTTP::Get.new(uri.request_uri)
-        request["User-Agent"] = "Tarantula/0.1 (domain-scoped crawler)"
+        request["User-Agent"] = "Tarantula/0.1"
         http.request(request) do |response|
           response_data[:status] = response.code.to_i
           response_data[:location] = response["location"]
@@ -84,8 +91,6 @@ module Tarantula
       response_data
     end
 
-
-    #Extract links form response
     def classify_response(uri, response)
       body = response.fetch(:body)
       content_type = response.fetch(:content_type)
@@ -113,7 +118,7 @@ module Tarantula
       unless uri.is_a?(URI::HTTP) && uri.host && uri.userinfo.nil?
         raise ArgumentError, "Only HTTP(S) URLs without credentials are supported"
       end
-      unless @domains.include?(uri.host.downcase)
+      unless DomainScope.includes?(@domains, uri.host)
         raise ArgumentError, "URL host is not in the supplied domain list: #{uri.host}"
       end
       return if uri.port == (uri.scheme == "https" ? 443 : 80)

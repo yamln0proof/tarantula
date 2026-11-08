@@ -12,6 +12,7 @@
               /  |  \
 ```
 **Tarantula: Web Crawler**
+**Crawl Your Need**
 
 A terminal-based crawler for exploring pages and files on supplied domains.
 Run a crawl from the interactive terminal UI and browse saved results.
@@ -20,7 +21,7 @@ Run a crawl from the interactive terminal UI and browse saved results.
 - Domain-scoped crawling
 - Database and project management
 - Configurable crawling and project export
-- CAPTCHA detection that stops crawling without solving challenges
+- CAPTCHA detection and Ai solving(In progress)
 
 
 ## Installation
@@ -61,10 +62,17 @@ Choose **Crawl**, then enter comma-separated domains or `@/path/to/domains.txt`.
 The domain file accepts comma-separated or whitespace-separated entries and
 lines beginning with `#` as comments. Requests use HTTP(S), are limited to
 the exact supplied hosts and standard ports, and do not follow redirects to
-other hosts. HTML page crawling is capped at 500 pages per run. If a page
+other hosts. The crawler follows discovered links on the supplied hosts,
+queues each page once, and records linked files separately. It continues until
+the discovered-link queue is empty, unless a CAPTCHA is detected. If a page
 appears to contain a CAPTCHA, the crawler records the detection and stops
 without processing that page or attempting to solve the challenge. Detection
 uses a local, confidence-scored rule-based HTML classifier.
+
+Choose **Configure Settings** to edit HTTP open/read timeouts, the redirect
+limit, maximum HTML response size, crawl database path, and CAPTCHA detection
+threshold. Settings apply for the current application session only. CAPTCHA
+challenges are detected but are not solved.
 
 Crawl summaries and discovered page/file metadata are saved to a JSON database
 at `data/tarantula-crawls.json`. Override its location with

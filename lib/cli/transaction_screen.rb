@@ -7,7 +7,8 @@ require_relative "../config/crawl_database"
 module Tarantula
   module CLI
     class TransactionScreen
-      def self.run(database: Tarantula::Config::CrawlDatabase.new)
+      def self.run(database: nil, database_path: Tarantula::Config::CrawlDatabase::DEFAULT_PATH)
+        database ||= Tarantula::Config::CrawlDatabase.new(path: database_path)
         new(database: database).run
       end
 
@@ -104,6 +105,7 @@ module Tarantula
           "Created: #{crawl[:created_at]}",
           "Domains: #{Array(crawl[:domains]).join(', ')}",
           "Pages: #{Array(crawl[:pages]).length}  Files: #{Array(crawl[:files]).length}  Missing: #{Array(crawl[:missing]).length}",
+          "Crawl errors: #{Array(crawl[:errors]).length}",
           "CAPTCHAs detected: #{Array(crawl[:captchas]).length}",
           "Stopped for CAPTCHA: #{crawl[:stopped_for_captcha] ? 'yes' : 'no'}",
           "Truncated at page limit: #{crawl[:truncated] ? 'yes' : 'no'}",
@@ -115,6 +117,8 @@ module Tarantula
         lines.concat(Array(crawl[:files]).map { |file| "  #{file[:url]} (#{file[:size]} bytes)" })
         lines.concat(["", "MISSING LINKS"])
         lines.concat(Array(crawl[:missing]).map { |missing| "  #{missing[:url]}" })
+        lines.concat(["", "CRAWL ERRORS"])
+        lines.concat(Array(crawl[:errors]).map { |error| "  #{error[:url]}: #{error[:error]}" })
         lines.concat(["", "CAPTCHAS"])
         lines.concat(Array(crawl[:captchas]).map do |captcha|
           "  #{captcha[:url]} (confidence: #{captcha[:confidence]})"

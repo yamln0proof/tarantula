@@ -27,6 +27,11 @@ module Tarantula
       security\s+check)\b
     /ix
 
+    def initialize(threshold: THRESHOLD)
+      @threshold = Float(threshold)
+      raise ArgumentError, "threshold must be between 0 and 1" unless @threshold.between?(0.0, 1.0)
+    end
+
     def detect(html)
       document = Nokogiri::HTML(html.to_s)
       title = document.at_css("title")&.text.to_s
@@ -50,7 +55,7 @@ module Tarantula
       end
 
       {
-        detected: confidence >= THRESHOLD,
+        detected: confidence >= @threshold,
         confidence: confidence.round(3),
         signals: signals.map(&:to_s)
       }
