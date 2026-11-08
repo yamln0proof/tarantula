@@ -22,6 +22,7 @@ module Worker
       @captcha_detector = Tarantula::CaptchaDetector.new
     end
 
+    #Main Method
     def run
       queue = @domains.map { |domain| "https://#{domain}/" }
       queued = queue.to_set
