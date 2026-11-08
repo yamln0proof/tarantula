@@ -9,6 +9,7 @@ require_relative "../config/settings"
 module Tarantula
   module CLI
     class MainScreen
+      SPINNER_FRAMES = ["|", "/", "-", "\\"].freeze
       FIELDS = [
         { name: :domains, label: "Domains (comma-separated or @file)" }
       ].freeze
@@ -54,8 +55,12 @@ module Tarantula
 
       def event_loop
         loop do
+          finish_crawl_if_ready
+          @window.timeout = @working ? 100 : -1
           draw_screen
           key = normalize_key(@window.getch)
+
+          next if @working
 
           if @result
             return :back if ["q", "Q", "\e", "\n", "\r", Curses::KEY_ENTER].include?(key)
@@ -106,27 +111,48 @@ module Tarantula
         raise ArgumentError, "Enter at least one domain." if domain_input.empty?
 
         @error = nil
-        @result = if domain_input.start_with?("@")
-                    domains_file = domain_input.delete_prefix("@").strip
-                    raise ArgumentError, "Enter a domain file path after @." if domains_file.empty?
+        @working = true
+        @animation_frame = 0
+        @crawl_thread = Thread.new do
+          begin
+            result = if domain_input.start_with?("@")
+                       domains_file = domain_input.delete_prefix("@").strip
+                       raise ArgumentError, "Enter a domain file path after @." if domains_file.empty?
 
-                    Worker::Crawler.new(domains_file: domains_file, settings: @settings).run
-                  else
-                    Worker::Crawler.new(domain_input.split(","), settings: @settings).run
-                  end
-        database = @database || Tarantula::Config::CrawlDatabase.new(path: @settings[:database_path])
-        crawl = database.store_crawl(domains: @result.fetch(:domains), result: @result)
-        @crawl_id = crawl.fetch(:id)
+                       Worker::Crawler.new(domains_file: domains_file, settings: @settings).run
+                     else
+                       Worker::Crawler.new(domain_input.split(","), settings: @settings).run
+                     end
+            database = @database || Tarantula::Config::CrawlDatabase.new(path: @settings[:database_path])
+            crawl = database.store_crawl(domains: result.fetch(:domains), result: result)
+            { result: result, crawl_id: crawl.fetch(:id) }
+          rescue ArgumentError, Errno::ENOENT, Errno::EACCES, IOError => e
+            { error: e.message }
+          end
+        end
+        @crawl_thread.report_on_exception = false
       rescue ArgumentError, Errno::ENOENT, Errno::EACCES, IOError => e
-        @result = nil
+        @working = false
         @error = e.message
+      end
+
+      def finish_crawl_if_ready
+        thread = @crawl_thread
+        return unless thread && !thread.alive?
+
+        outcome = thread.value
+        @result = outcome[:result]
+        @crawl_id = outcome[:crawl_id]
+        @error = outcome[:error]
+        @working = false
+        @crawl_thread = nil
       end
 
       #Crawling screen
       def draw_screen
         @window.clear
         draw_centered(1, "TARANTULA - CRAWL", color(1))
-        draw_centered(3, "Live HTTP(S) crawl ;)", Curses::A_NORMAL)
+        draw_centered(3, "Live HTTP(S) Crawl ;)", Curses::A_NORMAL)
 
         FIELDS.each_with_index do |field, index|
           row = 6 + index * 3
@@ -139,6 +165,10 @@ module Tarantula
           draw_text(13, "Error: #{@error}", color(3))
         elsif @result
           draw_result
+        elsif @working
+          frame = SPINNER_FRAMES[@animation_frame % SPINNER_FRAMES.length]
+          @animation_frame += 1
+          draw_text(13, "#{frame} Crawling happening...", Curses::A_NORMAL)
         else
           draw_text(13, "Tab/Up/Down: switch field | Enter: crawl | Esc/q: back", Curses::A_NORMAL)
         end

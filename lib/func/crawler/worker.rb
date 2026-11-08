@@ -28,7 +28,6 @@ module Worker
       )
       @processor = Tarantula::Processor.new(domains: @domains)
       @captcha_detector = Tarantula::CaptchaDetector.new(threshold: @settings[:captcha_threshold])
-      @captcha_solver = 
     end
 
     #Main Method
