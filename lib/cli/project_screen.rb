@@ -3,6 +3,7 @@
 
 require_relative "../func/crawler/worker"
 require_relative "../config/crawl_database"
+require_relative "../config/crawl_report_exporter"
 require_relative "../config/settings"
 
 module Tarantula
@@ -35,8 +36,11 @@ module Tarantula
                    Worker::Crawler.new(domain_input.split(","), settings: @settings).run
                  end
         crawl = @database.store_crawl(domains: result.fetch(:domains), result: result)
+        report_paths = Tarantula::Config::CrawlReportExporter.new.export(crawl)
         print_summary(result)
         @output.puts "Saved crawl: #{crawl[:id]}"
+        @output.puts "JSON report: #{report_paths[:json]}"
+        @output.puts "Text export: #{report_paths[:text]}"
         result
       end
 
@@ -51,6 +55,7 @@ module Tarantula
           @output.puts "Crawl error for #{error[:url]}: #{error[:error]}"
         end
         @output.puts "CAPTCHA detected; crawl stopped." if result[:stopped_for_captcha]
+        @output.puts "Crawl stopped by user." if result[:stopped_by_user]
         @output.puts "Stopped at the page limit." if result[:truncated]
       end
     end

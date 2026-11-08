@@ -108,6 +108,7 @@ module Tarantula
           "Crawl errors: #{Array(crawl[:errors]).length}",
           "CAPTCHAs detected: #{Array(crawl[:captchas]).length}",
           "Stopped for CAPTCHA: #{crawl[:stopped_for_captcha] ? 'yes' : 'no'}",
+          "Stopped by user: #{crawl[:stopped_by_user] ? 'yes' : 'no'}",
           "Truncated at page limit: #{crawl[:truncated] ? 'yes' : 'no'}",
           "",
           "PAGES"

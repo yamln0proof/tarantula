@@ -1,0 +1,720 @@
+{
+  "id": "18d3d0ea-2a57-4a7c-8c5c-dec571510c5f",
+  "created_at": "2026-11-08T09:08:40Z",
+  "domains": [
+    "google.com"
+  ],
+  "pages": [
+    {
+      "url": "https://www.google.com/",
+      "kind": "page",
+      "size": 88549,
+      "content_type": "text/html; charset=ISO-8859-1",
+      "links": [
+        {
+          "url": "https://mail.google.com/mail/&ogbl",
+          "kind": "page"
+        },
+        {
+          "url": "https://www.google.com/imghp?hl=bn&ogbl",
+          "kind": "page"
+        },
+        {
+          "url": "https://accounts.google.com/ServiceLogin?hl=bn&passive=true&continue=https://www.google.com/&ec=GAZAmgQ",
+          "kind": "page"
+        },
+        {
+          "url": "https://www.google.com/advanced_search?hl=bn&authuser=0",
+          "kind": "page"
+        },
+        {
+          "url": "https://www.google.com/setprefs?sig=0_zNa5LwrWGrb0lwIZ38CIIWDDWMQ%3D&hl=en&source=homepage&sa=X&ved=2ahUKEwitp5qFg_iXAxVEkeEIHZt7BjgQ2ZgBegQIABAE",
+          "kind": "page"
+        },
+        {
+          "url": "https://www.google.com/intl/bn/ads/",
+          "kind": "page"
+        },
+        {
+          "url": "https://www.google.com/intl/bn/about.html",
+          "kind": "page"
+        },
+        {
+          "url": "https://www.google.com/setprefs?sig=0_zNa5LwrWGrb0lwIZ38CIIWDDWMQ%3D&hl=en",
+          "kind": "page"
+        },
+        {
+          "url": "https://www.google.com/xjs/_/ss/k=xjs.hp.kolufqvH3kU.L.X.O/am=AAAQAAAAAAAAAAAQAAAAAAAAAAAAAEAAAAAAAAAAAAAAAgAgIAAJAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIIEBABACEAAAAAAAAAAAAAAAAAAAAAAAxAAkACAAEAAEAAAAAAAgAAAAAAAAAAAACA/d=1/ed=1/rs=ACT90oGb_cSMQQVpyOPxHbrPoSsH7HyRYQ/m=sb_he,d?cb=121990236",
+          "kind": "page"
+        },
+        {
+          "url": "https://www.google.com/images/branding/google_wordmark/v1/1x/googlelogo_color_white_background_272x92dp.png",
+          "kind": "file"
+        },
+        {
+          "url": "https://www.google.com/textinputassistant/tia.png",
+          "kind": "file"
+        }
+      ]
+    },
+    {
+      "url": "https://accounts.google.com/v3/signin/identifier?continue=https://mail.google.com/mail/%26ogbl/&emr=1&ltmpl=default&ltmplcache=2&osid=1&passive=true&scc=1&service=mail&ss=1&flowName=WebLiteSignIn&flowEntry=ServiceLogin&dsh=S120406426:1794128915961269",
+      "kind": "page",
+      "size": 946052,
+      "content_type": "text/html; charset=utf-8",
+      "links": [
+        {
+          "url": "https://accounts.google.com/signin/usernamerecovery?continue=https://mail.google.com/mail/%26ogbl/&dsh=S120406426:1794128915961269&emr=1&flowEntry=ServiceLogin&flowName=WebLiteSignIn&ltmpl=default&osid=1&scc=1&service=mail&ss=1",
+          "kind": "page"
+        },
+        {
+          "url": "https://support.google.com/accounts?p=signin_privatebrowsing&hl=en-US",
+          "kind": "page"
+        },
+        {
+          "url": "https://accounts.google.com/lifecycle/flows/signup?continue=https://mail.google.com/mail/%26ogbl/&dsh=S120406426:1794128915961269&emr=1&flowEntry=SignUp&flowName=GlifWebSignIn&ltmpl=default&osid=1&scc=1&service=mail&ss=1",
+          "kind": "page"
+        },
+        {
+          "url": "https://support.google.com/accounts?hl=en-US&p=account_iph",
+          "kind": "page"
+        },
+        {
+          "url": "https://accounts.google.com/TOS?loc=BD&hl=en-US&privacy=true",
+          "kind": "page"
+        },
+        {
+          "url": "https://accounts.google.com/TOS?loc=BD&hl=en-US",
+          "kind": "page"
+        }
+      ]
+    },
+    {
+      "url": "https://www.google.com/imghp?hl=bn&ogbl",
+      "kind": "page",
+      "size": 86085,
+      "content_type": "text/html; charset=ISO-8859-1",
+      "links": [
+        {
+          "url": "https://accounts.google.com/ServiceLogin?hl=bn&passive=true&continue=https://www.google.com/imghp%3Fhl%3Dbn%26ogbl&ec=GAZAAg",
+          "kind": "page"
+        },
+        {
+          "url": "https://www.google.com/advanced_image_search?hl=bn&authuser=0",
+          "kind": "page"
+        },
+        {
+          "url": "https://www.google.com/intl/bn/ads/",
+          "kind": "page"
+        },
+        {
+          "url": "https://www.google.com/intl/bn/about.html",
+          "kind": "page"
+        },
+        {
+          "url": "https://www.google.com/xjs/_/ss/k=xjs.hp.kolufqvH3kU.L.X.O/am=AAAQAAAAAAAAAAAQAAAAAAAAAAAAAEAAAAAAAAAAAAAAAgAgIAAJAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIIEBABACEAAAAAAAAAAAAAAAAAAAAAAAxAAkACAAEAAEAAAAAAAgAAAAAAAAAAAACA/d=1/ed=1/rs=ACT90oGb_cSMQQVpyOPxHbrPoSsH7HyRYQ/m=d?cb=121990236",
+          "kind": "page"
+        },
+        {
+          "url": "https://www.google.com/textinputassistant/tia.png",
+          "kind": "file"
+        }
+      ]
+    },
+    {
+      "url": "https://accounts.google.com/v3/signin/identifier?continue=https://www.google.com/&ec=GAZAmgQ&hl=bn&passive=true&flowName=WebLiteSignIn&flowEntry=ServiceLogin&dsh=S1124168862:1794128917054632",
+      "kind": "page",
+      "size": 946667,
+      "content_type": "text/html; charset=utf-8",
+      "links": [
+        {
+          "url": "https://accounts.google.com/signin/usernamerecovery?continue=https://www.google.com/&dsh=S1124168862:1794128917054632&ec=GAZAmgQ&flowEntry=ServiceLogin&flowName=WebLiteSignIn&hl=bn",
+          "kind": "page"
+        },
+        {
+          "url": "https://support.google.com/accounts?p=signin_privatebrowsing&hl=bn",
+          "kind": "page"
+        },
+        {
+          "url": "https://accounts.google.com/lifecycle/flows/signup?continue=https://www.google.com/&dsh=S1124168862:1794128917054632&ec=GAZAmgQ&flowEntry=SignUp&flowName=GlifWebSignIn&hl=bn",
+          "kind": "page"
+        },
+        {
+          "url": "https://support.google.com/accounts?hl=bn&p=account_iph",
+          "kind": "page"
+        },
+        {
+          "url": "https://accounts.google.com/TOS?loc=BD&hl=bn&privacy=true",
+          "kind": "page"
+        },
+        {
+          "url": "https://accounts.google.com/TOS?loc=BD&hl=bn",
+          "kind": "page"
+        }
+      ]
+    },
+    {
+      "url": "https://www.google.com/advanced_search?hl=bn&authuser=0",
+      "kind": "page",
+      "size": 317456,
+      "content_type": "text/html; charset=ISO-8859-1",
+      "links": [
+        {
+          "url": "https://www.google.com/webhp?tab=ww",
+          "kind": "page"
+        },
+        {
+          "url": "https://accounts.google.com/ServiceLogin?hl=bn&passive=true&continue=https://www.google.com/advanced_search%3Fhl%3Dbn%26authuser%3D0&ec=GAZAAQ",
+          "kind": "page"
+        },
+        {
+          "url": "https://support.google.com/websearch?p=ws_images_usagerights&hl=bn",
+          "kind": "page"
+        },
+        {
+          "url": "https://support.google.com/websearch?p=adv_pages_visited&hl=bn",
+          "kind": "page"
+        },
+        {
+          "url": "https://support.google.com/websearch?p=adv_operators&hl=bn",
+          "kind": "page"
+        },
+        {
+          "url": "https://www.google.com/preferences?hl=bn",
+          "kind": "page"
+        },
+        {
+          "url": "https://www.google.com/url?opi=89978449&q=https://support.google.com/websearch/%3Fp%3Dws_results_help%26hl%3Dbn%26fg%3D1&sa=U&ved=2ahUKEwjO19aGg_iXAxVqT2wGHc1OEVEQ8KwCegQIABAB&usg=AOvVaw2kWsK1PZQIpmPCELZFji56",
+          "kind": "page"
+        },
+        {
+          "url": "https://www.google.com/url?opi=89978449&q=https://policies.google.com/privacy%3Fhl%3Dbn%26fg%3D1&sa=U&ved=2ahUKEwjO19aGg_iXAxVqT2wGHc1OEVEQ8awCegQIABAC&usg=AOvVaw25mwQMrDOem3j94NPBVnpb",
+          "kind": "page"
+        },
+        {
+          "url": "https://www.google.com/url?opi=89978449&q=https://policies.google.com/terms%3Fhl%3Dbn%26fg%3D1&sa=U&ved=2ahUKEwjO19aGg_iXAxVqT2wGHc1OEVEQ8qwCegQIABAD&usg=AOvVaw0fuXfH28O4Ei0CU4qY9fwZ",
+          "kind": "page"
+        }
+      ]
+    },
+    {
+      "url": "https://business.google.com/en-all/google-ads/",
+      "kind": "page",
+      "size": 307019,
+      "content_type": "text/html; charset=utf-8",
+      "links": [
+        {
+          "url": "https://adsmarketingfrontend-pa.clients6.google.com",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/en-all/google-ads/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/static/images/google-favicon-180.png",
+          "kind": "file"
+        },
+        {
+          "url": "https://business.google.com/static/images/google-favicon-48.png",
+          "kind": "file"
+        },
+        {
+          "url": "https://business.google.com/static/images/favicon.ico",
+          "kind": "file"
+        },
+        {
+          "url": "https://business.google.com/en-all/",
+          "kind": "page"
+        },
+        {
+          "url": "https://myaccount.google.com/",
+          "kind": "page"
+        },
+        {
+          "url": "https://accounts.google.com/AddSession?hl=en&continue=https://business.google.com/",
+          "kind": "page"
+        },
+        {
+          "url": "https://accounts.google.com/Logout?continue=https://business.google.com/",
+          "kind": "page"
+        },
+        {
+          "url": "https://ads.google.com/nav/selectaccount?dst=/aw/campaigns/new/express&subid={locale}-{lang}-awhp-g-aw-{device}-home-sso-bgc!o2",
+          "kind": "page"
+        },
+        {
+          "url": "https://merchants.google.com/mc/default?mcsubid=all-en-bgc-mc-web!o3&gfr_referral=true&hl=en&fmp=1",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/?gmbsrc=all-en-z-z-z-gmb-s-z-u~bgcmhp-sso-u&hl=en&skipLandingPage=true&skipPagesList=1&cbl=sso&cbp=bgc&cbt=sso",
+          "kind": "page"
+        },
+        {
+          "url": "https://analytics.google.com/analytics/?utm_campaign=bgc-website-ga&utm_source=google&utm_medium=ga-organic-website&utm_content=ga-create-account&utm_term=cta-website-ga-organic",
+          "kind": "page"
+        },
+        {
+          "url": "https://policies.google.com/privacy",
+          "kind": "page"
+        },
+        {
+          "url": "https://myaccount.google.com/termsofservice",
+          "kind": "page"
+        },
+        {
+          "url": "https://accounts.google.com/ServiceLogin?&continue=https://business.google.com/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/en-all/google-ads/campaign-goals/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/en-all/google-ads/how-ads-work/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/en-all/google-ads/campaign-budget/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/en-all/support/ads-expert/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/en-all/merchant-center/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/en-all/business-profile/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/en-all/ad-solutions/performance-max/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/en-all/ad-solutions/youtube-ads/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/en-all/ad-solutions/search/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/en-all/ad-solutions/demand-generation/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/en-all/ad-solutions/display-ads/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/en-all/ad-solutions/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/en-all/ad-tools/manage-accounts/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/en-all/ad-tools/keyword-planner/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/en-all/ad-tools/google-ads-editor/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/en-all/ad-tools/google-ads-app/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/en-all/ad-tools/reach-planner/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/en-all/ad-tools/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/en-all/google-analytics/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/en-all/think/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/en-all/accelerate/home/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/en-all/support/become-a-partner/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/en-all/support/work-with-a-partner/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/en-all/support/",
+          "kind": "page"
+        },
+        {
+          "url": "https://ads.google.com/signup?subid=all-en-awhp-g-aw-{device}-home-top-bgc!o2",
+          "kind": "page"
+        },
+        {
+          "url": "https://ads.google.com/nav/login?subid=all-en-awhp-g-aw-{device}-home-signin-bgc!o2",
+          "kind": "page"
+        },
+        {
+          "url": "https://www.google.com/intl/en_gb/ads/coupons/terms/cyoi/",
+          "kind": "page"
+        },
+        {
+          "url": "https://ads.google.com/signup?subid=all-en-awhp-g-aw-{device}-home-cyo-ban-bgc!o2",
+          "kind": "page"
+        },
+        {
+          "url": "https://ads.google.com/signup?subid=all-en-awhp-g-aw-{device}-home-hero-bgc!o2",
+          "kind": "page"
+        },
+        {
+          "url": "https://ads.google.com/signup?subid=all-en-awhp-g-aw-{device}-home-mid-bgc!o2",
+          "kind": "page"
+        },
+        {
+          "url": "https://www.google.com/intl/en_us/ads/coupons/terms/cyoi/",
+          "kind": "page"
+        },
+        {
+          "url": "https://ads.google.com/signup?subid=all-en-awhp-g-aw-{device}-home-cyo-mid-bgc!o2",
+          "kind": "page"
+        },
+        {
+          "url": "https://ads.google.com/signup?subid=all-en-awhp-g-aw-{device}-home-cin-bgc!o2",
+          "kind": "page"
+        },
+        {
+          "url": "https://ads.google.com/signup?subid=all-en-awhp-g-aw-{device}-home-end-bgc!o2",
+          "kind": "page"
+        },
+        {
+          "url": "https://support.google.com/google-ads/answer/16517525",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/en-all/support/schedule-appointment/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/en-all/ad-solutions/app-ads/",
+          "kind": "page"
+        },
+        {
+          "url": "https://support.google.com/google-ads/answer/13695777",
+          "kind": "page"
+        },
+        {
+          "url": "https://support.google.com/google-ads/answer/2404190?",
+          "kind": "page"
+        },
+        {
+          "url": "https://support.google.com/google-ads/answer/2567043",
+          "kind": "page"
+        },
+        {
+          "url": "https://support.google.com/google-ads/answer/10724896",
+          "kind": "page"
+        },
+        {
+          "url": "https://support.google.com/google-ads/answer/9510373",
+          "kind": "page"
+        },
+        {
+          "url": "https://support.google.com/google-ads/answer/15910187?hl=en",
+          "kind": "page"
+        },
+        {
+          "url": "https://support.google.com/google-ads/answer/2454022?hl=en",
+          "kind": "page"
+        },
+        {
+          "url": "https://support.google.com/google-ads/answer/10581234?hl=en",
+          "kind": "page"
+        },
+        {
+          "url": "https://support.google.com/google-ads/answer/13982458?hl=en",
+          "kind": "page"
+        },
+        {
+          "url": "https://support.google.com/google-ads/answer/13695389",
+          "kind": "page"
+        },
+        {
+          "url": "https://support.google.com/google-ads/answer/6247380",
+          "kind": "page"
+        },
+        {
+          "url": "https://support.google.com/google-ads/answer/7065882?hl=en",
+          "kind": "page"
+        },
+        {
+          "url": "https://support.google.com/google-ads/answer/6388096",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/en-all/merchant-center/manufacturer-center/",
+          "kind": "page"
+        },
+        {
+          "url": "https://support.google.com/google-ads/",
+          "kind": "page"
+        },
+        {
+          "url": "https://support.google.com/merchants/answer/12159157",
+          "kind": "page"
+        },
+        {
+          "url": "https://support.google.com/google-ads/answer/6146252?utm_medium=et&utm_campaign=en&utm_source=ww-ww-et-b2bfooter_adwords",
+          "kind": "page"
+        },
+        {
+          "url": "https://support.google.com/google-ads/community?ctx=lithium",
+          "kind": "page"
+        },
+        {
+          "url": "https://developers.google.com/",
+          "kind": "page"
+        },
+        {
+          "url": "https://developers.google.com/google-ads/scripts/docs/start",
+          "kind": "page"
+        },
+        {
+          "url": "https://support.google.com/google-ads/answer/2476688",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/en-all/ad-tools/google-ads-api/",
+          "kind": "page"
+        },
+        {
+          "url": "https://workspace.google.com/",
+          "kind": "page"
+        },
+        {
+          "url": "https://www.google.com/chrome/",
+          "kind": "page"
+        },
+        {
+          "url": "https://cloud.google.com/",
+          "kind": "page"
+        },
+        {
+          "url": "https://adsense.google.com/start/",
+          "kind": "page"
+        },
+        {
+          "url": "https://admob.google.com/home/get-started/",
+          "kind": "page"
+        },
+        {
+          "url": "https://www.google.com",
+          "kind": "page"
+        },
+        {
+          "url": "https://www.google.com/intl/en/about",
+          "kind": "page"
+        },
+        {
+          "url": "https://www.google.com/intl/en/about/products",
+          "kind": "page"
+        },
+        {
+          "url": "https://policies.google.com/privacy?authuser=0",
+          "kind": "page"
+        },
+        {
+          "url": "https://policies.google.com/terms",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/aunz/google-ads/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/br/google-ads/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/ca-en/google-ads/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/ca-fr/google-ads/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/cz/google-ads/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/de/google-ads/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/es/google-ads/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/es-all/google-ads/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/fr/google-ads/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/in/google-ads/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/id/google-ads/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/it/google-ads/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/nl/google-ads/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/pl/google-ads/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/ru-all/google-ads/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/ro/google-ads/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/se/google-ads/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/tr/google-ads/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/uk/google-ads/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/us/google-ads/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/vn/google-ads/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/il/google-ads/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/ar-all/google-ads/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/cn/google-ads/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/tw/google-ads/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/jp/google-ads/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/kr/google-ads/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/th/google-ads/",
+          "kind": "page"
+        },
+        {
+          "url": "https://business.google.com/ua/google-ads/",
+          "kind": "page"
+        },
+        {
+          "url": "https://ads.google.com/signup?subid=all-en-awhp-g-aw-{device}-home-flo-bgc!o2",
+          "kind": "page"
+        },
+        {
+          "url": "https://www.google.com/recaptcha/api.js?render=6Lfz6Z0rAAAAAOtj-FM77_5TIC1qgOzBnS3bzHj1",
+          "kind": "file"
+        }
+      ]
+    }
+  ],
+  "files": [
+    {
+      "url": "https://www.google.com/images/branding/google_wordmark/v1/1x/googlelogo_color_white_background_272x92dp.png",
+      "kind": "file",
+      "size": 2478,
+      "content_type": "image/png"
+    },
+    {
+      "url": "https://www.google.com/textinputassistant/tia.png",
+      "kind": "file",
+      "size": 258,
+      "content_type": "image/png"
+    }
+  ],
+  "missing": [],
+  "captchas": [
+    {
+      "url": "https://business.google.com/en-all/google-ads/",
+      "confidence": 0.98,
+      "signals": [
+        "provider_markup"
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "url": "https://www.google.com/preferences?hl=en",
+      "error": "ArgumentError: invalid byte sequence in UTF-8"
+    }
+  ],
+  "visited": [
+    "https://google.com/",
+    "https://www.google.com/",
+    "https://mail.google.com/mail/&ogbl",
+    "https://accounts.google.com/v3/signin/identifier?continue=https://mail.google.com/mail/%26ogbl/&emr=1&ltmpl=default&ltmplcache=2&osid=1&passive=true&scc=1&service=mail&ss=1&flowName=WebLiteSignIn&flowEntry=ServiceLogin&dsh=S120406426:1794128915961269",
+    "https://www.google.com/imghp?hl=bn&ogbl",
+    "https://accounts.google.com/ServiceLogin?hl=bn&passive=true&continue=https://www.google.com/&ec=GAZAmgQ",
+    "https://accounts.google.com/v3/signin/identifier?continue=https://www.google.com/&ec=GAZAmgQ&hl=bn&passive=true&flowName=WebLiteSignIn&flowEntry=ServiceLogin&dsh=S1124168862:1794128917054632",
+    "https://www.google.com/advanced_search?hl=bn&authuser=0",
+    "https://www.google.com/setprefs?sig=0_zNa5LwrWGrb0lwIZ38CIIWDDWMQ%3D&hl=en&source=homepage&sa=X&ved=2ahUKEwitp5qFg_iXAxVEkeEIHZt7BjgQ2ZgBegQIABAE",
+    "https://www.google.com/preferences?hl=en",
+    "https://www.google.com/intl/bn/ads/",
+    "https://business.google.com/en-all/google-ads/"
+  ],
+  "stopped_for_captcha": true,
+  "stopped_by_user": true,
+  "truncated": false
+}

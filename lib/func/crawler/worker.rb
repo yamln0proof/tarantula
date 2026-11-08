@@ -18,6 +18,8 @@ module Worker
     def initialize(domains = nil, domains_file: nil, settings: Tarantula::Config::Settings.new)
       @domains = normalize_domains(domain_source(domains, domains_file))
       @settings = settings
+      @stop_mutex = Mutex.new
+      @stop_requested = false
 
       @fetcher = Tarantula::Fetcher.new(
         domains: @domains,
@@ -28,6 +30,10 @@ module Worker
       )
       @processor = Tarantula::Processor.new(domains: @domains)
       @captcha_detector = Tarantula::CaptchaDetector.new(threshold: @settings[:captcha_threshold])
+    end
+
+    def stop
+      @stop_mutex.synchronize { @stop_requested = true }
     end
 
     #Main Method
@@ -43,7 +49,7 @@ module Worker
       errors = []
       failed_urls = Set.new
 
-      until queue.empty?
+      until queue.empty? || stop_requested?
         url = queue.shift
         next unless visited.add?(url)
 
@@ -86,6 +92,7 @@ module Worker
           pages << result.reject { |key, _| key == :body }.merge(links: links)
 
           links.each do |link|
+            break if stop_requested?
             next if link[:kind] == :page
             next if files.key?(link[:url]) || missing_urls.include?(link[:url]) || failed_urls.include?(link[:url])
 
@@ -125,11 +132,16 @@ module Worker
         errors: errors,
         visited: visited.to_a,
         stopped_for_captcha: !captchas.empty?,
+        stopped_by_user: stop_requested?,
         truncated: false
       }
     end
 
     private
+
+    def stop_requested?
+      @stop_mutex.synchronize { @stop_requested }
+    end
 
     def record_crawl_error(errors, failed_urls, url, error)
       failed_urls.add(url)

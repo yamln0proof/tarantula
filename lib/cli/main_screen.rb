@@ -4,6 +4,7 @@
 require "curses"
 require_relative "../func/crawler/worker"
 require_relative "../config/crawl_database"
+require_relative "../config/crawl_report_exporter"
 require_relative "../config/settings"
 
 module Tarantula
@@ -31,6 +32,7 @@ module Tarantula
         Curses.init_screen
         @screen_open = true
         @window = Curses.stdscr
+        resize_window
         setup_terminal
         event_loop
       ensure
@@ -60,7 +62,16 @@ module Tarantula
           draw_screen
           key = normalize_key(@window.getch)
 
-          next if @working
+          if key == Curses::KEY_RESIZE
+            resize_window
+            next
+          end
+
+          if @working
+            @crawler.stop if ["s", "S"].include?(key) && !@stop_requested
+            @stop_requested = true if ["s", "S"].include?(key)
+            next
+          end
 
           if @result
             return :back if ["q", "Q", "\e", "\n", "\r", Curses::KEY_ENTER].include?(key)
@@ -83,6 +94,14 @@ module Tarantula
             append_character(key) if printable_character?(key)
           end
         end
+      end
+
+      def resize_window
+        rows = Curses.lines
+        columns = Curses.cols
+        return if rows <= 0 || columns <= 0
+
+        @window.resize(rows, columns)
       end
 
       def normalize_key(key)
@@ -112,20 +131,27 @@ module Tarantula
 
         @error = nil
         @working = true
+        @stop_requested = false
         @animation_frame = 0
+        @crawler = if domain_input.start_with?("@")
+                     domains_file = domain_input.delete_prefix("@").strip
+                     raise ArgumentError, "Enter a domain file path after @." if domains_file.empty?
+
+                     Worker::Crawler.new(domains_file: domains_file, settings: @settings)
+                   else
+                     Worker::Crawler.new(domain_input.split(","), settings: @settings)
+                   end
         @crawl_thread = Thread.new do
           begin
-            result = if domain_input.start_with?("@")
-                       domains_file = domain_input.delete_prefix("@").strip
-                       raise ArgumentError, "Enter a domain file path after @." if domains_file.empty?
-
-                       Worker::Crawler.new(domains_file: domains_file, settings: @settings).run
-                     else
-                       Worker::Crawler.new(domain_input.split(","), settings: @settings).run
-                     end
+            result = @crawler.run
             database = @database || Tarantula::Config::CrawlDatabase.new(path: @settings[:database_path])
             crawl = database.store_crawl(domains: result.fetch(:domains), result: result)
-            { result: result, crawl_id: crawl.fetch(:id) }
+            begin
+              report_paths = Tarantula::Config::CrawlReportExporter.new.export(crawl)
+              { result: result, crawl_id: crawl.fetch(:id), report_paths: report_paths }
+            rescue IOError, SystemCallError, JSON::GeneratorError => e
+              { result: result, crawl_id: crawl.fetch(:id), report_error: e.message }
+            end
           rescue ArgumentError, Errno::ENOENT, Errno::EACCES, IOError => e
             { error: e.message }
           end
@@ -143,7 +169,11 @@ module Tarantula
         outcome = thread.value
         @result = outcome[:result]
         @crawl_id = outcome[:crawl_id]
+        @report_paths = outcome[:report_paths]
+        @report_error = outcome[:report_error]
         @error = outcome[:error]
+        @stop_requested = false
+        @crawler = nil
         @working = false
         @crawl_thread = nil
       end
@@ -168,7 +198,8 @@ module Tarantula
         elsif @working
           frame = SPINNER_FRAMES[@animation_frame % SPINNER_FRAMES.length]
           @animation_frame += 1
-          draw_text(13, "#{frame} Crawling happening...", Curses::A_NORMAL)
+          status = @stop_requested ? "Stopping after current request..." : "Crawling... press s to stop"
+          draw_text(13, "#{frame} #{status}", Curses::A_NORMAL)
         else
           draw_text(13, "Tab/Up/Down: switch field | Enter: crawl | Esc/q: back", Curses::A_NORMAL)
         end
@@ -180,14 +211,20 @@ module Tarantula
       def draw_result
         draw_text(13, "Crawl completed and saved.", color(4))
         draw_text(14, "Pages: #{@result[:pages].length}  Files: #{@result[:files].length}  Missing: #{@result[:missing].length}", Curses::A_NORMAL)
+        draw_text(15, "Crawl ID: #{@crawl_id}", Curses::A_NORMAL)
         draw_text(16, "Stopped because a CAPTCHA was detected.", color(3)) if @result[:stopped_for_captcha]
+        draw_text(16, "Crawl stopped by user.", color(3)) if @result[:stopped_by_user]
         errors = Array(@result[:errors])
         draw_text(17, "Crawl errors: #{errors.length}", errors.empty? ? Curses::A_NORMAL : color(3))
-        draw_text(18, "#{errors.first[:url]}: #{errors.first[:error]}", color(3)) unless errors.empty?
-        draw_text(15, "Crawl ID: #{@crawl_id}", Curses::A_NORMAL)
+        if @report_error
+          draw_text(18, "Report export failed: #{@report_error}", color(3))
+        elsif @report_paths
+          draw_text(18, "Reports saved in: ./reports", Curses::A_NORMAL)
+        end
+        draw_text(19, "#{errors.first[:url]}: #{errors.first[:error]}", color(3)) unless errors.empty?
 
         preview = @result[:pages].first(3).map { |page| page[:url] }
-        preview.each_with_index { |url, index| draw_text(19 + index, url, Curses::A_NORMAL) }
+        preview.first(2).each_with_index { |url, index| draw_text(20 + index, url, Curses::A_NORMAL) }
         draw_text(Curses.lines - 2, "Press Enter, q, or Esc to return to the menu", Curses::A_REVERSE)
       end
 
@@ -206,7 +243,7 @@ module Tarantula
         draw_text(row, text, attribute, [(Curses.cols - text.length) / 2, 0].max)
       end
 
-      def draw_text(row, text, attribute, column = 2)
+      def draw_text(row, text, attribute, column = 0)
         return if row.negative? || row >= Curses.lines || column >= Curses.cols
 
         text = text.to_s[0, Curses.cols - column]

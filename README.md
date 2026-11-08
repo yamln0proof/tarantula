@@ -68,6 +68,8 @@ the discovered-link queue is empty, unless a CAPTCHA is detected. If a page
 appears to contain a CAPTCHA, the crawler records the detection and stops
 without processing that page or attempting to solve the challenge. Detection
 uses a local, confidence-scored rule-based HTML classifier.
+During an interactive crawl, press `s` to stop after the current HTTP request;
+partial results are saved and marked as stopped by the user.
 
 Choose **Configure Settings** to edit HTTP open/read timeouts, the redirect
 limit, maximum HTML response size, crawl database path, and CAPTCHA detection

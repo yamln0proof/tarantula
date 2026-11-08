@@ -39,6 +39,7 @@ module Tarantula
           errors: result.fetch(:errors, []),
           visited: result.fetch(:visited),
           stopped_for_captcha: result.fetch(:stopped_for_captcha, false),
+          stopped_by_user: result.fetch(:stopped_by_user, false),
           truncated: result.fetch(:truncated)
         }
 
@@ -48,7 +49,22 @@ module Tarantula
           write_state(state)
         end
 
+        create_crawl_data_file(crawl)
         crawl
+      end
+
+      def create_crawl_data_file(crawl)
+        crawl_path = File.join(crawl_data_directory, "#{crawl.fetch(:id)}.json")
+        FileUtils.mkdir_p(File.dirname(crawl_path))
+
+        Tempfile.create([".#{File.basename(crawl_path)}.", ".tmp"], File.dirname(crawl_path)) do |file|
+          file.write("#{JSON.pretty_generate(crawl)}\n")
+          file.flush
+          file.fsync
+          File.rename(file.path, crawl_path)
+        end
+
+        crawl_path
       end
 
       def recent_crawls(limit: 100)
@@ -70,6 +86,10 @@ module Tarantula
 
       def lock_path
         "#{path}.lock"
+      end
+
+      def crawl_data_directory
+        File.join(File.dirname(path), "crawls")
       end
 
       def with_lock(mode)
