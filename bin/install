@@ -21,12 +21,12 @@ case "$OS" in
     Linux)
         if [ -f /etc/debian_version ]; then
             echo -e "Debian/Ubuntu detected. Installing build essentials and ncurses headers..."
-            sudo apt-get update
-            sudo apt-get install -y build-essential libncurses-dev git
+            apt-get update
+            apt-get install -y build-essential libncurses-dev git
         elif [ -f /etc/fedora-release ]; then
             echo -e "Fedora detected. Installing development tools and ncurses headers..."
-            sudo dnf groupinstall -y "Development Tools"
-            sudo dnf install -y ncurses-devel git
+            dnf groupinstall -y "Development Tools"
+            dnf install -y ncurses-devel git
         elif [ -f /etc/arch-release ]; then
             echo -e "Arch Linux detected. Installing base-devel and ncurses..."
             sudo pacman -Syu --needed --noconfirm base-devel ncurses git
@@ -97,13 +97,8 @@ fi
 
 # 5. Run Local Setup Script
 echo -e "\nRunning project setup script..."
-if [ -f "bin/setup" ]; then
-    chmod +x bin/setup
-    ./bin/setup
-else
-    echo -e "${YELLOW}bin/setup not found, running bundle install directly...${NC}"
-    bundle install
-fi
+echo -e "${YELLOW}bin/setup not found, running bundle install directly...${NC}"
+bundle install
 
 echo -e "\n${GREEN}==================================================${NC}"
 echo -e "${GREEN}      Installation Completed Successfully!        ${NC}"
