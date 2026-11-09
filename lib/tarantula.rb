@@ -1,13 +1,13 @@
 #Copyright (c) 2026 Nabil Ahmed
 # frozen_string_literal: true
 
-require_relative "tarantula/version"
+require_relative "../tarantula/version"
 require_relative "config/settings"
-require_relative "cli/welcome_screen"
-require_relative "cli/main_screen"
-require_relative "cli/settings_screen"
-require_relative "cli/transaction_screen"
-require_relative "config/crawl_database"
+require_relative "/cli/welcome_screen"
+require_relative "/cli/main_screen"
+require_relative "/cli/settings_screen"
+require_relative "/cli/transaction_screen"
+require_relative "/config/crawl_database"
 
 module Tarantula
   class Error < StandardError; end
