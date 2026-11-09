@@ -23,7 +23,7 @@ Gem::Specification.new do |spec|
   spec.files = IO.popen(%w[git ls-files -z], chdir: __dir__, err: IO::NULL) do |ls|
     ls.readlines("\x0", chomp: true).reject do |f|
       (f == gemspec) ||
-        %w[bin/setup bin/console bin/uninstall].include?(f) ||
+        %w[bin/setup bin/uninstall].include?(f) ||
         f.start_with?(*%w[test/ spec/ features/ .git appveyor Gemfile])
     end
   end
