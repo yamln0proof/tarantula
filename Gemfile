@@ -8,10 +8,5 @@ gemspec
 group :development do
   gem "irb"
   gem "rake", "~> 13.0"
-  gem "net/http"
-  gem "uri"
-  gem "ncurses"
-  gem "pdcurses"
-  gem "nokogiri"
 end
 

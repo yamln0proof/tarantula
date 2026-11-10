@@ -1,52 +1,117 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -Eeuo pipefail
 
-script_dir="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
-cd "$script_dir/.."
-
-if ! command -v ruby >/dev/null 2>&1; then
-  echo "Ruby 3.1 or newer is required. Install Ruby, then run bin/setup again." >&2
-  exit 1
-fi
-
-ruby -e 'abort "Ruby 3.1 or newer is required (found #{RUBY_VERSION})." if Gem::Version.new(RUBY_VERSION) < Gem::Version.new("3.1")'
-
-if ! command -v bundle >/dev/null 2>&1; then
-  echo "Bundler is required. Install it with: gem install bundler" >&2
-  exit 1
-fi
-
-install_prerequisite_hint() {
-  case "$(uname -s)" in
-    Darwin)
-      cat >&2 <<'MESSAGE'
-Dependency installation failed. The curses gem may need native build tools.
-Install Xcode Command Line Tools with `xcode-select --install`; with Homebrew,
-install ncurses using `brew install ncurses`, then run bin/setup again.
-MESSAGE
-      ;;
-    Linux)
-      cat >&2 <<'MESSAGE'
-Dependency installation failed. The curses gem may need a C compiler and
-ncurses development headers. On Debian/Ubuntu run:
-  sudo apt-get install build-essential libncurses-dev
-On Fedora run:
-  sudo dnf install gcc make ncurses-devel
-On Arch Linux run:
-  sudo pacman -S base-devel ncurses
-Then run bin/setup again.
-MESSAGE
-      ;;
-    *)
-      echo "Dependency installation failed. Install a C compiler and ncurses development headers, then retry." >&2
-      ;;
-  esac
+log() {
+  printf '\n[%s] %s\n' "$(date +%H:%M:%S)" "$*"
 }
 
-if ! bundle install; then
-  install_prerequisite_hint
-  exit 1
-fi
+warn() {
+  printf '\n[WARN] %s\n' "$*" >&2
+}
 
-bundle exec ruby -Ilib -e 'require "tarantula"'
-echo "Tarantula setup complete. Launch it with: bin/tarantula"
+die() {
+  printf '\n[ERROR] %s\n' "$*" >&2
+  exit 1
+}
+
+script_dir="$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+cd "$script_dir/.."
+
+ensure_sudo() {
+  if [[ "$(id -u)" -ne 0 ]]; then
+    echo "sudo"
+  else
+    echo ""
+  fi
+}
+
+install_linux_dependencies() {
+  local sudo_cmd
+  sudo_cmd="$(ensure_sudo)"
+
+  if command -v apt-get >/dev/null 2>&1; then
+    log "Installing Linux build dependencies with apt-get"
+    if [[ -n "$sudo_cmd" ]]; then
+      $sudo_cmd apt-get update
+      $sudo_cmd apt-get install -y build-essential libncurses-dev git
+    else
+      apt-get update
+      apt-get install -y build-essential libncurses-dev git
+    fi
+    return 0
+  fi
+
+  if command -v dnf >/dev/null 2>&1; then
+    log "Installing Linux build dependencies with dnf"
+    if [[ -n "$sudo_cmd" ]]; then
+      $sudo_cmd dnf install -y @development-tools ncurses-devel git
+    else
+      dnf install -y @development-tools ncurses-devel git
+    fi
+    return 0
+  fi
+
+  if command -v pacman >/dev/null 2>&1; then
+    log "Installing Linux build dependencies with pacman"
+    if [[ -n "$sudo_cmd" ]]; then
+      $sudo_cmd pacman -Syu --needed --noconfirm base-devel ncurses git
+    else
+      pacman -Syu --needed --noconfirm base-devel ncurses git
+    fi
+    return 0
+  fi
+
+  warn "No supported package manager was found for this Linux system. Please install build-essential, ncurses development headers, and git manually."
+  return 1
+}
+
+install_macos_dependencies() {
+  if ! xcode-select -p >/dev/null 2>&1; then
+    log "Installing Xcode Command Line Tools"
+    xcode-select --install
+    die "Xcode Command Line Tools were not available. Please complete the installation prompt and rerun this script."
+  fi
+
+  if command -v brew >/dev/null 2>&1; then
+    log "Installing macOS dependencies with Homebrew"
+    brew install ncurses git >/dev/null
+  fi
+}
+
+check_ruby() {
+  ruby -e 'abort "Ruby 3.1 or newer is required (found #{RUBY_VERSION})." if Gem::Version.new(RUBY_VERSION) < Gem::Version.new("3.1")'
+}
+
+main() {
+  log "Preparing Tarantula environment"
+
+  case "$(uname -s)" in
+    Linux)
+      install_linux_dependencies || die "Dependency installation failed. Install build tools and ncurses development headers manually, then rerun this script."
+      ;;
+    Darwin)
+      install_macos_dependencies
+      ;;
+    *)
+      die "This setup script supports Linux and macOS only."
+      ;;
+  esac
+
+  command -v ruby >/dev/null 2>&1 || die "Ruby is required. Install Ruby 3.1 or newer and rerun this script."
+  check_ruby
+
+  if ! command -v bundle >/dev/null 2>&1; then
+    log "Installing Bundler"
+    gem install bundler
+  fi
+
+  log "Installing Ruby gems"
+  bundle install --jobs 4 --retry 3
+
+  log "Verifying Tarantula loads successfully"
+  bundle exec ruby -Ilib -e 'require "tarantula"'
+
+  log "Setup complete. Launch the app with: ./bin/tarantula"
+}
+
+main "$@"
