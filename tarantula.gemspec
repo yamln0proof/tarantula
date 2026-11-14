@@ -24,7 +24,7 @@ Gem::Specification.new do |spec|
   tracked_files = IO.popen(%w[git ls-files -z], chdir: __dir__, err: IO::NULL) do |ls|
     ls.readlines("\x0", chomp: true)
   end
-  spec.files = (tracked_files + ["lib/cli/install_screen.rb", "lib/cli/export_screen.rb"]).uniq.reject do |f|
+  spec.files = tracked_files.uniq.reject do |f|
     (f == gemspec) ||
       %w[bin/setup bin/console bin/uninstall].include?(f) ||
       f.start_with?(*%w[test/ spec/ features/ .git appveyor Gemfile data/])
