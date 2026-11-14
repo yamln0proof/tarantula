@@ -15,9 +15,10 @@ module Worker
     DOMAIN_PATTERN = /\A[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?\z/i
 
     #Initialization
-    def initialize(domains = nil, domains_file: nil, settings: Tarantula::Config::Settings.new)
+    def initialize(domains = nil, domains_file: nil, settings: Tarantula::Config::Settings.new, on_update: nil)
       @domains = normalize_domains(domain_source(domains, domains_file))
       @settings = settings
+      @on_update = on_update
       @stop_mutex = Mutex.new
       @stop_requested = false
 
@@ -26,7 +27,10 @@ module Worker
         max_html_bytes: @settings[:max_html_bytes],
         open_timeout: @settings[:open_timeout],
         read_timeout: @settings[:read_timeout],
-        max_redirects: @settings[:max_redirects]
+        max_redirects: @settings[:max_redirects],
+        requests_per_minute: @settings[:requests_per_minute],
+        custom_header: @settings[:custom_header],
+        stop_requested: method(:stop_requested?)
       )
       @processor = Tarantula::Processor.new(domains: @domains)
       @captcha_detector = Tarantula::CaptchaDetector.new(threshold: @settings[:captcha_threshold])
@@ -60,10 +64,13 @@ module Worker
           record_crawl_error(errors, failed_urls, url, error)
           next
         end
+        next if result[:kind] == :stopped
+
         next if result[:url] != url && !visited.add?(result[:url])
 
         case result[:kind]
         when :page
+          notify_update(:page, result)
           begin
             detection = @captcha_detector.detect(result[:body])
           rescue ArgumentError, EncodingError, Nokogiri::XML::SyntaxError => error
@@ -89,6 +96,7 @@ module Worker
             record_crawl_error(errors, failed_urls, result[:url], error)
             next
           end
+          links.each { |link| notify_update(:link, link) }
           pages << result.reject { |key, _| key == :body }.merge(links: links)
 
           links.each do |link|
@@ -103,8 +111,11 @@ module Worker
               record_crawl_error(errors, failed_urls, link[:url], error)
               next
             end
+            next if file[:kind] == :stopped
+
             if file[:kind] == :file
               files[file[:url]] ||= file
+              notify_update(:file, file)
             elsif file[:kind] == :missing
               missing << file
               missing_urls.add?(file[:url])
@@ -116,6 +127,7 @@ module Worker
           #Save to file
         when :file
           files[result[:url]] ||= result
+          notify_update(:file, result)
         when :missing
           missing << result
           missing_urls.add?(result[:url])
@@ -141,6 +153,10 @@ module Worker
 
     def stop_requested?
       @stop_mutex.synchronize { @stop_requested }
+    end
+
+    def notify_update(type, item)
+      @on_update&.call(type, item)
     end
 
     def record_crawl_error(errors, failed_urls, url, error)

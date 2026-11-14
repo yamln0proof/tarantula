@@ -10,6 +10,8 @@ module Tarantula
         ["Crawl", :start],
         ["Configure Settings", :settings],
         ["View Saved Logs", :logs],
+        ["Export Report", :export],
+        ["Install on this device", :install],
         ["Exit", :exit]
       ].freeze
       SPIDER_LOGO = [

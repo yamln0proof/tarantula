@@ -1,18 +1,17 @@
 # Tarantula
 
-```text
-                  |
-                  |
-               \  |  /
-             ---\ | /---
-                 \|/
-                (@)
-              --/|\--
-               / | \
-              /  |  \
-```
+<pre style="color: red">
+                |
+                |
+               /|\\
+            __/ | \\__
+            \\  (@)  /
+             \\ /|\\ /
+              / | \\
+             /  |  \\
+</pre>
 **Tarantula: Web Crawler**
-**Crawl Your Need**
+**Crawling Made Easy**
 
 A terminal-based crawler for exploring pages and files on supplied domains.
 Run a crawl from the interactive terminal UI and browse saved results.
@@ -50,6 +49,23 @@ On Debian/Ubuntu Linux, install them with
 `sudo apt-get install build-essential libncurses-dev`. Fedora and Arch
 prerequisites are printed by `bin/setup` when needed.
 
+To install Tarantula for your current macOS or Linux user, start
+`bin/tarantula` and choose **Install on this device**. This builds and installs
+the gem and its dependencies into your user gem directory without `sudo`. It
+installs the `tarantula` command at `~/.local/bin/tarantula`. Add that directory
+to your shell's `PATH` if needed:
+
+```bash
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+On macOS, ensure the native build prerequisites described above are installed
+if the `curses` gem needs to be compiled.
+
+Installed crawls are stored under `$XDG_DATA_HOME/tarantula` or
+`~/.local/share/tarantula` on Linux, and in
+`~/Library/Application Support/tarantula` on macOS.
+
 ## Usage
 
 Start the terminal UI:
@@ -72,15 +88,32 @@ During an interactive crawl, press `s` to stop after the current HTTP request;
 partial results are saved and marked as stopped by the user.
 
 Choose **Configure Settings** to edit HTTP open/read timeouts, the redirect
-limit, maximum HTML response size, crawl database path, and CAPTCHA detection
-threshold. Settings apply for the current application session only. CAPTCHA
-challenges are detected but are not solved.
+limit, maximum HTML response size, requests per minute, crawl database path,
+custom HTTP header, and CAPTCHA detection threshold. Set requests per minute
+to `0` for no rate limit. Enter a custom header as `Name: Value`; clear the
+field to remove it. Settings apply for the current application session only.
+CAPTCHA challenges are detected but are not solved.
 
 Crawl summaries and discovered page/file metadata are saved to a JSON database
 at `data/tarantula-crawls.json`. Override its location with
 `TARANTULA_DATABASE_PATH`.
 Choose **View Saved Logs** from the welcome screen to
 browse previous crawls and inspect their results.
+
+Choose **Export Report** to select a saved crawl, set an output directory, and
+write a text report named `crawl-<id>.txt`. Use Up/Down to select a crawl, `d`
+to edit the destination, and `e` or Enter to export.
+
+Export a text-only report to a specific directory with:
+
+```ruby
+report_path = Tarantula::Config::CrawlReportExporter.new.export_text(
+  crawl,
+  directory: "/path/to/reports"
+)
+```
+
+The method creates the directory if needed and returns the generated file path.
 
 ## Uninstallation
 
@@ -96,6 +129,12 @@ Confirm the prompt to proceed, or pass `--yes` to skip it:
 
 ```bash
 bin/uninstall --yes
+```
+
+To uninstall a per-user installation created from the welcome screen, run:
+
+```bash
+gem uninstall --user-install --bindir "$HOME/.local/bin" tarantula
 ```
 
 ## Development

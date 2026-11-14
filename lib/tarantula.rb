@@ -7,6 +7,8 @@ require_relative "cli/welcome_screen"
 require_relative "cli/main_screen"
 require_relative "cli/settings_screen"
 require_relative "cli/transaction_screen"
+require_relative "cli/export_screen"
+require_relative "cli/install_screen"
 require_relative "config/crawl_database"
 
 module Tarantula
@@ -25,8 +27,12 @@ module Tarantula
           CLI::MainScreen.run(settings: @settings)
         when :logs
           CLI::TransactionScreen.run(database_path: @settings[:database_path])
+        when :export
+          CLI::ExportScreen.run(database_path: @settings[:database_path])
         when :settings
           CLI::SettingsScreen.run(settings: @settings)
+        when :install
+          CLI::InstallScreen.run
         when :exit, nil
           return :exit
         else

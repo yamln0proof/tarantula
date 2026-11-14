@@ -25,6 +25,14 @@ module Tarantula
         raise IOError, "Unable to generate crawl report: #{error.message}"
       end
 
+      def export_text(crawl, directory:)
+        directory = File.expand_path(directory)
+        FileUtils.mkdir_p(directory)
+        text_path = File.join(directory, "crawl-#{crawl.fetch(:id)}.txt")
+        File.write(text_path, text_report(crawl))
+        text_path
+      end
+
       private
 
       def text_report(crawl)

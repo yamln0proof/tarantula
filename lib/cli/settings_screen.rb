@@ -10,6 +10,8 @@ module Tarantula
         { key: :read_timeout, label: "HTTP read timeout (seconds)" },
         { key: :max_redirects, label: "Maximum redirects" },
         { key: :max_html_bytes, label: "Maximum HTML size (bytes)" },
+        { key: :requests_per_minute, label: "Requests per minute (0 = unlimited)" },
+        { key: :custom_header, label: "Custom HTTP header (Name: Value)" },
         { key: :database_path, label: "Crawl database path" },
         { key: :captcha_threshold, label: "CAPTCHA detection threshold (0-1)" }
       ].freeze

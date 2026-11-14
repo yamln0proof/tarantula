@@ -7,6 +7,7 @@ require "set"
 require "timeout"
 require "uri"
 require_relative "domain_scope"
+require_relative "../../config/settings"
 
 module Tarantula
   class Fetcher
@@ -18,7 +19,8 @@ module Tarantula
 
     #Initialization 
     def initialize(domains:, max_html_bytes: MAX_HTML_BYTES, open_timeout: OPEN_TIMEOUT,
-                   read_timeout: READ_TIMEOUT, max_redirects: MAX_REDIRECTS)
+                   read_timeout: READ_TIMEOUT, max_redirects: MAX_REDIRECTS,
+                   requests_per_minute: 0, custom_header: "", stop_requested: -> { false })
       @domains = domains.map { |domain| normalize_domain(domain) }.to_set.freeze
       raise ArgumentError, "Provide at least one domain" if @domains.empty?
 
@@ -27,8 +29,17 @@ module Tarantula
       @open_timeout = Integer(open_timeout)
       @read_timeout = Integer(read_timeout)
       @max_redirects = Integer(max_redirects)
+      @requests_per_minute = Integer(requests_per_minute)
+      @custom_header = Tarantula::Config::Settings.normalize_custom_header(custom_header)
       raise ArgumentError, "timeouts must be positive" unless @open_timeout.positive? && @read_timeout.positive?
       raise ArgumentError, "max_redirects cannot be negative" if @max_redirects.negative?
+      raise ArgumentError, "requests_per_minute cannot be negative" if @requests_per_minute.negative?
+      raise ArgumentError, "stop_requested must respond to call" unless stop_requested.respond_to?(:call)
+
+      @request_interval = @requests_per_minute.zero? ? nil : 60.0 / @requests_per_minute
+      @request_rate_mutex = Mutex.new
+      @next_request_at = nil
+      @stop_requested_check = stop_requested
     end
 
     #Main fetching mechanism
@@ -39,6 +50,8 @@ module Tarantula
       loop do
         validate_target!(uri)
         response = request(uri)
+        return { url: uri.to_s, kind: :stopped } unless response
+
         status = response.fetch(:status)
 
         if [301, 302, 303, 307, 308].include?(status)
@@ -65,6 +78,8 @@ module Tarantula
 
     #Request method
     def request(uri)
+      return unless wait_for_request_slot
+
       response_data = {}
       http = Net::HTTP.new(uri.host, uri.port, nil)
       http.use_ssl = uri.scheme == "https"
@@ -73,6 +88,10 @@ module Tarantula
       http.start do |http|
         request = Net::HTTP::Get.new(uri.request_uri)
         request["User-Agent"] = "Tarantula/0.1"
+        if !@custom_header.empty?
+          name, value = @custom_header.split(":", 2)
+          request[name] = value.strip
+        end
         http.request(request) do |response|
           response_data[:status] = response.code.to_i
           response_data[:location] = response["location"]
@@ -89,6 +108,26 @@ module Tarantula
         end
       end
       response_data
+    end
+
+    def wait_for_request_slot
+      return false if @stop_requested_check.call
+      return true unless @request_interval
+
+      @request_rate_mutex.synchronize do
+        while @next_request_at
+          remaining = @next_request_at - Process.clock_gettime(Process::CLOCK_MONOTONIC)
+          break unless remaining.positive?
+
+          return false if @stop_requested_check.call
+
+          sleep([remaining, 0.1].min)
+        end
+        return false if @stop_requested_check.call
+
+        @next_request_at = Process.clock_gettime(Process::CLOCK_MONOTONIC) + @request_interval
+      end
+      true
     end
 
     def classify_response(uri, response)

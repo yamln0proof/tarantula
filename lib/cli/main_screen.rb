@@ -2,6 +2,7 @@
 # frozen_string_literal: true
 
 require "curses"
+require "set"
 require_relative "../func/crawler/worker"
 require_relative "../config/crawl_database"
 require_relative "../config/crawl_report_exporter"
@@ -26,6 +27,12 @@ module Tarantula
         @active_field = 0
         @result = nil
         @error = nil
+        @live_mutex = Mutex.new
+        @live_links = []
+        @live_files = []
+        @live_link_urls = Set.new
+        @live_file_urls = Set.new
+        @live_scroll_offset = 0
       end
 
       def run
@@ -68,8 +75,17 @@ module Tarantula
           end
 
           if @working
-            @crawler.stop if ["s", "S"].include?(key) && !@stop_requested
-            @stop_requested = true if ["s", "S"].include?(key)
+            case key
+            when Curses::KEY_UP, "k", "K"
+              @live_scroll_offset += 1
+            when Curses::KEY_DOWN, "j", "J"
+              @live_scroll_offset = [@live_scroll_offset - 1, 0].max
+            when "s", "S"
+              unless @stop_requested
+                @crawler.stop
+                @stop_requested = true
+              end
+            end
             next
           end
 
@@ -133,13 +149,22 @@ module Tarantula
         @working = true
         @stop_requested = false
         @animation_frame = 0
+        @live_scroll_offset = 0
+        @live_mutex.synchronize do
+          @live_links.clear
+          @live_files.clear
+          @live_link_urls.clear
+          @live_file_urls.clear
+        end
         @crawler = if domain_input.start_with?("@")
                      domains_file = domain_input.delete_prefix("@").strip
                      raise ArgumentError, "Enter a domain file path after @." if domains_file.empty?
 
-                     Worker::Crawler.new(domains_file: domains_file, settings: @settings)
+                     Worker::Crawler.new(domains_file: domains_file, settings: @settings,
+                                         on_update: method(:record_live_update))
                    else
-                     Worker::Crawler.new(domain_input.split(","), settings: @settings)
+                     Worker::Crawler.new(domain_input.split(","), settings: @settings,
+                                         on_update: method(:record_live_update))
                    end
         @crawl_thread = Thread.new do
           begin
@@ -178,6 +203,21 @@ module Tarantula
         @crawl_thread = nil
       end
 
+      def record_live_update(type, item)
+        @live_mutex.synchronize do
+          case type
+          when :page, :link
+            next unless @live_link_urls.add?(item[:url])
+
+            @live_links << { url: item[:url], kind: type == :page ? :page : item[:kind] }
+          when :file
+            next unless @live_file_urls.add?(item[:url])
+
+            @live_files << item
+          end
+        end
+      end
+
       #Crawling screen
       def draw_screen
         @window.clear
@@ -198,13 +238,92 @@ module Tarantula
         elsif @working
           frame = SPINNER_FRAMES[@animation_frame % SPINNER_FRAMES.length]
           @animation_frame += 1
-          status = @stop_requested ? "Stopping after current request..." : "Crawling... press s to stop"
+          status = if @stop_requested
+                     "Stopping after current request... | Up/Down: scroll"
+                   else
+                     "Crawling... s: stop | Up/Down: scroll"
+                   end
           draw_text(13, "#{frame} #{status}", Curses::A_NORMAL)
+          draw_live_activity
         else
           draw_text(13, "Tab/Up/Down: switch field | Enter: crawl | Esc/q: back", Curses::A_NORMAL)
         end
 
         @window.refresh
+      end
+
+      def draw_live_activity
+        links, files = @live_mutex.synchronize { [@live_links.dup, @live_files.dup] }
+        top = 14
+        bottom = Curses.lines - 1
+        height = bottom - top + 1
+        return if height < 4
+
+        if Curses.cols >= 80
+          column_gap = 3
+          column_width = (Curses.cols - column_gap) / 2
+          draw_live_box(top, 0, column_width, height, "DISCOVERED LINKS", links) do |item|
+            "#{item[:kind]}: #{item[:url]}"
+          end
+          files_column = column_width + column_gap
+          draw_live_box(top, files_column, Curses.cols - files_column, height, "FILES", files) do |file|
+            "#{file[:url]} (#{file[:size]} bytes)"
+          end
+        else
+          box_height = (height - 1) / 2
+          draw_live_box(top, 0, Curses.cols, box_height, "DISCOVERED LINKS", links) do |item|
+            "#{item[:kind]}: #{item[:url]}"
+          end
+          files_top = top + box_height + 1
+          draw_live_box(files_top, 0, Curses.cols, bottom - files_top + 1, "FILES", files) do |file|
+            "#{file[:url]} (#{file[:size]} bytes)"
+          end
+        end
+      end
+
+      def draw_live_box(top, left, width, height, title, items)
+        return if top.negative? || width < 4 || height < 4 || top + height > Curses.lines
+
+        right = left + width - 1
+        bottom = top + height - 1
+        draw_text(top, "+#{'-' * (width - 2)}+", Curses::A_NORMAL, left)
+        draw_text(bottom, "+#{'-' * (width - 2)}+", Curses::A_NORMAL, left)
+        (top + 1...bottom).each do |row|
+          draw_text(row, "|", Curses::A_NORMAL, left)
+          draw_text(row, "|", Curses::A_NORMAL, right)
+        end
+        draw_text(top + 1, "#{title} (#{items.length})"[0, width - 2], Curses::A_BOLD, left + 1)
+
+        content_rows = height - 3
+        return if content_rows <= 0
+
+        lines = visible_live_lines(items, width - 2, content_rows) { |item| yield(item) }
+        lines.each_with_index do |line, index|
+          draw_text(top + index + 2, line, Curses::A_NORMAL, left + 1)
+        end
+      end
+
+      def visible_live_lines(items, width, row_limit)
+        offset = @live_scroll_offset
+        recent_lines = []
+
+        items.reverse_each do |item|
+          wrapped_lines = yield(item).to_s.chars.each_slice(width).map(&:join)
+          if offset >= wrapped_lines.length
+            offset -= wrapped_lines.length
+            next
+          end
+
+          visible_lines = wrapped_lines.first(wrapped_lines.length - offset)
+          offset = 0
+          visible_lines.reverse_each do |line|
+            recent_lines << line
+            break if recent_lines.length == row_limit
+          end
+          break if recent_lines.length == row_limit
+        end
+
+        recent_lines.reverse
       end
 
       #Result box
